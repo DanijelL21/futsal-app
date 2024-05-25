@@ -1,7 +1,11 @@
 const colors = {
-  backgroundColor: "#050504",
-  tournamentHeader: "#22c1b6",
-  tournamentHeaderText: "#0d120f",
+  backgroundUpperColor: "#090c44",
+  backgroundLowerColor: "#23778c",
+  headerColor: "#090c44",
+  headerTextColor: "#f9f9fa",
+  bottomTabColor: "#23778c",
+  bottomTabIconColor: "#f9f9fa",
+  redNoticeColor: "#d24f2e",
 };
 
 export default colors;

@@ -1,43 +1,35 @@
-import React from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Dimensions,
-  Animated,
-  ImageRequireSource,
-  Pressable,
-} from "react-native";
+import { StyleSheet, Text, View, Animated, Pressable } from "react-native";
 import type { PagerViewOnPageScrollEventData } from "react-native-pager-view";
+import { useRef, useEffect, useState, useContext } from "react";
 import PagerView from "react-native-pager-view";
 import data from "../dummy/dummy_data";
+import Background from "../components/Background";
+import colors from "../constants/colors";
+import dimensions from "../constants/dimensions";
+import PrimaryButton from "../components/PrimaryButton";
+import { getTournaments } from "../util/https";
+import { BasicContext } from "../store/basic-context";
 
-const { width, height } = Dimensions.get("window");
-const DOT_SIZE = 60; // size of little circle
-const TICKER_HEIGHT = 30; // size of title
-const IMAGE_SIZE = width * 0.6;
+const DOT_SIZE = dimensions.screenWidth * 0.15;
+const TITLE_SIZE = dimensions.screenWidth * 0.075;
+const IMAGE_SIZE = dimensions.screenWidth * 0.6;
+const DATE_SIZE = dimensions.screenWidth * 0.065;
 
-const Ticker = ({
-  scrollOffsetAnimatedValue,
-  positionAnimatedValue,
-}: {
-  scrollOffsetAnimatedValue: Animated.Value;
-  positionAnimatedValue: Animated.Value;
-}) => {
+const Title = ({ data, scrollOffsetAnimatedValue, positionAnimatedValue }) => {
   const inputRange = [0, data.length];
   const translateY = Animated.add(
     scrollOffsetAnimatedValue,
     positionAnimatedValue
   ).interpolate({
     inputRange,
-    outputRange: [0, data.length * -TICKER_HEIGHT],
+    outputRange: [0, data.length * -TITLE_SIZE],
   });
   return (
-    <View style={styles.tickerContainer}>
+    <View style={styles.titleContainer}>
       <Animated.View style={{ transform: [{ translateY }] }}>
         {data.map(({ name }, index) => {
           return (
-            <Text key={index} style={styles.tickerText}>
+            <Text key={index} style={styles.titleText}>
               {name}
             </Text>
           );
@@ -48,14 +40,11 @@ const Ticker = ({
 };
 
 const Item = ({
+  name,
   imageUri,
   date,
   scrollOffsetAnimatedValue,
-}: {
-  imageUri: ImageRequireSource;
-  date: string;
-  scrollOffsetAnimatedValue: Animated.Value;
-  positionAnimatedValue: Animated.Value;
+  navigation,
 }) => {
   const inputRange = [0, 0.5, 0.99];
   const inputRangeOpacity = [0, 0.5, 0.99];
@@ -70,26 +59,33 @@ const Item = ({
   });
 
   const handleImagePress = () => {
-    console.log("ENTERED");
+    navigation.navigate("TournamentScreen", {
+      tournamentName: name,
+      tournamentPicture: imageUri,
+    });
   };
-
+  console.log("DATE", date);
+  console.log("NAME", name);
+  console.log("IMAGEURI", imageUri);
   return (
     <View style={styles.itemStyle}>
       <Pressable onPress={handleImagePress}>
         {({ pressed }) => (
           <Animated.Image
-            source={imageUri}
+            source={{
+              uri: imageUri,
+            }}
             style={[
               styles.image,
               {
                 transform: [{ scale }],
-                opacity: pressed ? 0.8 : 1, // Optional: Reduce opacity when pressed
+                opacity: pressed ? 0.8 : 1,
               },
             ]}
           />
         )}
       </Pressable>
-      <View style={styles.textContainer}>
+      <View style={styles.dateContainer}>
         <Animated.Text
           style={[
             styles.date,
@@ -106,11 +102,9 @@ const Item = ({
 };
 
 const Pagination = ({
+  data,
   scrollOffsetAnimatedValue,
   positionAnimatedValue,
-}: {
-  scrollOffsetAnimatedValue: Animated.Value;
-  positionAnimatedValue: Animated.Value;
 }) => {
   const inputRange = [0, data.length];
   const translateX = Animated.add(
@@ -147,19 +141,28 @@ const Pagination = ({
 
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 
-export default function TournamentsOverviewScreen() {
-  const scrollOffsetAnimatedValue = React.useRef(new Animated.Value(0)).current;
-  const positionAnimatedValue = React.useRef(new Animated.Value(0)).current;
+export default function TournamentsOverviewScreen({ navigation, route }) {
+  // const [data, setData] = useState([]);
+  const scrollOffsetAnimatedValue = useRef(new Animated.Value(0)).current;
+  const positionAnimatedValue = useRef(new Animated.Value(0)).current;
+
+  // get data
+
+  // useEffect(() => {
+  //   async function fetchTournaments() {
+  //     const tournamentsData = await getTournaments();
+  //     setData(tournamentsData);
+  //   }
+  //   fetchTournaments();
+  // }, [navigation]);
 
   return (
-    <View style={styles.container}>
-      {/* THIS IS MAIN TITLE  */}
-      <View style={{ alignContent: "center", alignItems: "center" }}>
-        <Ticker
-          scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
-          positionAnimatedValue={positionAnimatedValue}
-        />
-      </View>
+    <Background>
+      <Title
+        data={data}
+        scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
+        positionAnimatedValue={positionAnimatedValue}
+      />
       <AnimatedPagerView
         initialPage={0}
         style={{ width: "100%", height: "100%" }}
@@ -177,12 +180,13 @@ export default function TournamentsOverviewScreen() {
           }
         )}
       >
-        {data.map((item, index) => (
-          <View collapsable={false} key={index}>
+        {data.map((item) => (
+          <View collapsable={false} key={item.id}>
             <Item
               {...item}
               scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
               positionAnimatedValue={positionAnimatedValue}
+              navigation={navigation}
             />
           </View>
         ))}
@@ -190,44 +194,45 @@ export default function TournamentsOverviewScreen() {
 
       {/* THIS ARE LITTLE CIRCLES WHICH DINAMICALLY CHANGES */}
       <Pagination
+        data={data}
         scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
         positionAnimatedValue={positionAnimatedValue}
       />
-    </View>
+      <View style={styles.textContainer}>
+        <PrimaryButton
+          onPress={() => {}}
+          buttonText={
+            "To create tournament, please contact leonimail100@gmail.com"
+          }
+          buttonTextStyle={styles.text}
+        />
+      </View>
+    </Background>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   itemStyle: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingBottom: 100,
   },
-  imageStyle: {
-    width: width * 0.75,
-    height: width * 0.75,
-    resizeMode: "contain",
-    flex: 1,
-  },
-  textContainer: {
+  dateContainer: {
     alignItems: "center",
     marginTop: 50,
   },
   date: {
-    color: "#444",
-    textTransform: "uppercase",
-    fontSize: 24,
-    fontWeight: "800",
-    letterSpacing: 2,
+    color: colors.headerTextColor,
+    fontSize: DATE_SIZE,
+    fontWeight: "bold",
+    letterSpacing: 3,
     marginBottom: 5,
   },
   pagination: {
     position: "absolute",
-    right: 20,
-    bottom: 40,
+    right: dimensions.screenWidth * 0.05,
+    bottom: 150,
     flexDirection: "row",
     height: DOT_SIZE,
   },
@@ -246,25 +251,34 @@ const styles = StyleSheet.create({
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
     borderWidth: 2,
-    borderColor: "#ddd",
+    borderColor: colors.headerTextColor,
   },
-  tickerContainer: {
-    position: "absolute",
-    top: 40,
-    left: 20,
+  titleContainer: {
+    alignItems: "center",
+    alignContent: "center",
+    top: 100, // move title up or down
     overflow: "hidden",
-    height: TICKER_HEIGHT,
+    height: TITLE_SIZE,
   },
-  tickerText: {
-    fontSize: TICKER_HEIGHT,
-    lineHeight: TICKER_HEIGHT,
+  titleText: {
+    fontSize: TITLE_SIZE,
+    lineHeight: TITLE_SIZE,
     textTransform: "uppercase",
-    fontWeight: "800",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: colors.headerTextColor,
   },
   image: {
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: IMAGE_SIZE / 2,
-    marginTop: 50,
+  },
+  textContainer: {
+    bottom: 100,
+    alignItems: "center",
+  },
+  text: {
+    color: "white",
+    fontSize: 12,
   },
 });

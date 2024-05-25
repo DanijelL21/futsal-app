@@ -7,3 +7,7 @@ npm install axios
 
 
 npm install react-native-pager-view
+
+npx expo install expo-linear-gradient
+
+npm install @react-native-async-storage/async-storage

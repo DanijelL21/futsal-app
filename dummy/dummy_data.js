@@ -1,28 +1,31 @@
 const data = [
   {
-    id: 1,
-    name: "MNT TEST",
-    color: "#80ccdf",
-    date: "17.4-13.4",
-    imageUri: require("../images/hreljin.png"),
-    //   imageUri:
-    //     "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Spaghetti_Bolognese_mit_Parmesan_oder_Grana_Padano.jpg/800px-Spaghetti_Bolognese_mit_Parmesan_oder_Grana_Padano.jpg",
-    // },
+    adminMail: "mnthreljin@gmail.com",
+    color: "red",
+    date: "08.07-13.07.2024",
+    id: 2,
+    imageUri:
+      "https://drive.google.com/uc?export=view&id=12jYhGPb1VIEDuPyB8ONTZ-lGDN0ScWuW",
+    name: "mnt_test",
   },
   {
-    id: 2,
-    name: "MNT TEST_TWO",
-    color: "#6c2444",
-    date: "17.4-13.4",
-    imageUri: require("../images/rijeka.png"),
+    adminMail: "mnthreljin@gmail.com",
+    color: "red",
+    date: "08.07-13.07.2024",
+    id: 1,
+    imageUri:
+      "https://drive.google.com/uc?export=view&id=1qvb8edMBBIz_-xvp91CMgwHa9vHpcx_Y",
+    name: "MNT KRALJEVICA",
+  },
+  {
+    adminMail: "mnthreljin@gmail.com",
+    color: "red",
+    date: "08.07-13.07.2024",
+    id: 3,
+    imageUri:
+      "https://drive.google.com/uc?export=view&id=12jYhGPb1VIEDuPyB8ONTZ-lGDN0ScWuW",
+    name: "MNT SMRIKA",
   },
 ];
 
 export default data;
-
-// const data = [
-//   {
-//     name: "Humlan P",
-//     image: require("../zassets/urbanears_blue.png"),
-//     color: "#9dcdfa",
-//   },
