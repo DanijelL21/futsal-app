@@ -1,14 +1,15 @@
 import { Text, View, FlatList, StyleSheet } from "react-native";
 import { getTeams } from "../../util/https";
 import { useState, useCallback, useContext } from "react";
-import PrimaryButton from "../../components/PrimaryButton";
-import SecondaryButton from "../../components/SecondaryButton";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import SecondaryButton from "../../components/buttons/SecondaryButton";
 import { useFocusEffect } from "@react-navigation/native";
 import Background from "../../components/Background";
 import colors from "../../constants/colors";
 import dimensions from "../../constants/dimensions";
 import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
+import LoadinSpinner from "../../components/LoadingSpinner";
 const ADD_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const ADD_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TEAM_PADDING = dimensions.screenWidth * 0.0375;
@@ -16,6 +17,7 @@ const TEAM_FONT_SIZE = dimensions.screenWidth * 0.0375;
 
 function TeamsScreen({ navigation, route }) {
   const [teamsList, setTeamsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const authCtx = useContext(AuthContext);
   const isAdmin = authCtx.isAuthenticated;
@@ -34,11 +36,21 @@ function TeamsScreen({ navigation, route }) {
           setTeamsList(filteredTeams);
         } catch (error) {
           console.error("Error fetching teams:", error);
+        } finally {
+          setLoading(false);
         }
       }
       fetchTeams();
     }, [])
   );
+
+  if (loading) {
+    return (
+      <Background>
+        <LoadinSpinner />
+      </Background>
+    );
+  }
 
   function teamDetailsNavigation(team) {
     navigation.navigate("TeamDetails", {

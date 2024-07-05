@@ -1,23 +1,13 @@
 import { useState, useEffect, useContext } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  FlatList,
-  Alert,
-} from "react-native";
-import Button from "./components/Button";
+import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
 import colors from "../constants/colors";
-import { Ionicons } from "@expo/vector-icons";
 import Background from "../components/Background";
-import PrimaryButton from "../components/PrimaryButton";
-import SecondaryButton from "../components/SecondaryButton";
 import dimensions from "../constants/dimensions";
 import { BasicContext } from "../store/basic-context";
-import { AuthContext } from "../store/auth-context";
 import { updateData, postData } from "../util/https";
-const DEFAULT_NR_OF_PLAYERS = 13;
+import { validateGameDataInput } from "../components/InputValidator";
+import PrimaryButton from "../components/buttons/PrimaryButton";
+import idGenerator from "../components/IdGenerator";
 const MAX_TEXT_LENGTH = dimensions.screenWidth * 0.05; // 20
 const TEXT_INPUT_SIZE = dimensions.screenWidth * 0.05; // INPUT SIZE
 
@@ -27,118 +17,67 @@ const BOXES_HEIGHT = TEXT_INPUT_SIZE * 2;
 const BOXES_MARGIN = dimensions.screenWidth * 0.025;
 const LEFT_INFO_MARGIN = TEXT_INFO_SIZE * 0.5882;
 
-function gamesHandler({ navigation, route }) {
-  const nrOfTeams = route.params.nrOfTeams;
-  const modifyTeamData = route.params.modifyTeamData;
-  const [teamData, setTeamData] = useState({
-    id: modifyTeamData ? modifyTeamData.id : nrOfTeams + 2,
-    teamName: modifyTeamData ? modifyTeamData.teamName : "",
-    manager: modifyTeamData ? modifyTeamData.manager : "",
-    group: modifyTeamData ? modifyTeamData.group : "TBD",
-    players: modifyTeamData
-      ? modifyTeamData.players
-      : Array.from({ length: DEFAULT_NR_OF_PLAYERS }, (_, index) => ({
-          number: (index + 1).toString(),
-          name: "",
-        })),
+function GamesHandler({ navigation, route }) {
+  const torunamentPhase = route.params.torunamentPhase;
+  const modifyGame = route.params.modifyGameData;
+  const [gameData, setGameData] = useState({
+    id: modifyGame ? modifyGame.id : "",
+    home: modifyGame ? modifyGame.home : "",
+    away: modifyGame ? modifyGame.away : "",
+    date: modifyGame ? modifyGame.date : "",
+    time: modifyGame ? modifyGame.time : "",
   });
 
-  const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated;
   const basicCtx = useContext(BasicContext);
   const tournament_name = basicCtx.getTournamentName();
 
   // set title
   useEffect(() => {
-    if (modifyTeamData !== undefined) {
+    if (modifyGame !== undefined) {
       navigation.setOptions({
-        title: "Modify Team",
+        title: "Modify game",
       });
     }
-  }, [modifyTeamData, navigation]);
+  }, [modifyGame, navigation]);
 
   function inputChangedHandler(inputIdentifier, enteredValue) {
-    setTeamData((curInputs) => {
-      if (
-        inputIdentifier === "teamName" ||
-        inputIdentifier === "manager" ||
-        inputIdentifier === "group"
-      ) {
-        return {
-          ...curInputs,
-          [inputIdentifier]: enteredValue,
-        };
-      } else if (inputIdentifier.startsWith("playerNumber")) {
-        const index = parseInt(inputIdentifier.split("-")[1]);
-        const updatedPlayers = [...curInputs.players];
-        updatedPlayers[index].number = enteredValue;
-        return {
-          ...curInputs,
-          players: updatedPlayers,
-        };
-      } else if (inputIdentifier.startsWith("playerName")) {
-        const index = parseInt(inputIdentifier.split("-")[1]);
-        const updatedPlayers = [...curInputs.players];
-        updatedPlayers[index].name = enteredValue;
-        return {
-          ...curInputs,
-          players: updatedPlayers,
-        };
-      }
-      return curInputs;
-    });
+    setGameData((curInputs) => ({
+      ...curInputs,
+      [inputIdentifier]: enteredValue,
+    }));
   }
 
-  function removePlayerHandler(index) {
-    setTeamData((prevState) => {
-      const updatedPlayers = [...prevState.players];
-      updatedPlayers.splice(index, 1);
-      return {
-        ...prevState,
-        players: updatedPlayers,
-      };
-    });
-  }
-
-  function validateInput() {
-    isValid = false;
-
-    if (teamData.teamName.length < 2) {
-      message = `Team name should have minimum of 2 letters`;
-    } else if (teamData.manager.length > MAX_TEXT_LENGTH) {
-      message = `Manager name should have less then ${MAX_TEXT_LENGTH} characters`;
-    } else {
-      isValid = true;
-      message = "";
-    }
-    return { isValid: isValid, message: message };
+  async function generateNextId() {
+    const nextId = await idGenerator(tournament_name, torunamentPhase);
+    gameData.id = nextId;
   }
 
   const handleButtonPress = () => {
-    const { isValid, message } = validateInput(teamData);
+    const { isValid, message } = validateGameDataInput(gameData);
 
     if (!isValid) {
       Alert.alert("Validation Error", message);
       return;
     }
-    if (modifyTeamData !== undefined) {
+    if (modifyGame !== undefined) {
+      console.log("MG", modifyGame);
       Alert.alert(
         "Confirm Changes",
-        `Are you sure you want to add team?`,
+        `Are you sure you want to modify game?`,
         [
           {
             text: "Cancel",
             style: "cancel",
           },
           {
-            text: "Add",
+            text: "Modify",
             style: "destructive",
             onPress: async () => {
               await updateData(
                 tournament_name,
-                teamData,
-                "teams",
-                modifyTeamData.firebaseKey
+                gameData,
+                `games/${torunamentPhase}`,
+                modifyGame.firebaseKey
               );
               navigation.goBack();
             },
@@ -147,9 +86,10 @@ function gamesHandler({ navigation, route }) {
         { cancelable: false }
       );
     } else {
+      generateNextId();
       Alert.alert(
         "Confirm Changes",
-        `Are you sure you want to add team?`,
+        `Are you sure you want to add game?`,
         [
           {
             text: "Cancel",
@@ -159,7 +99,11 @@ function gamesHandler({ navigation, route }) {
             text: "Add",
             style: "destructive",
             onPress: async () => {
-              await postData(tournament_name, teamData, "teams");
+              await postData(
+                tournament_name,
+                gameData,
+                `games/${torunamentPhase}`
+              );
               navigation.goBack();
             },
           },
@@ -169,110 +113,68 @@ function gamesHandler({ navigation, route }) {
     }
   };
 
-  const addPlayerHandler = () => {
-    const newPlayer = { number: "", name: "" };
-    setTeamData((prevState) => ({
-      ...prevState,
-      players: [...prevState.players, newPlayer],
-    }));
-  };
-
-  function addPlayerButton() {
-    return (
-      <SecondaryButton onPress={addPlayerHandler}>
-        <View style={styles.addPlayer}>
-          <Ionicons
-            name="add-outline"
-            color={colors.headerTextColor}
-            size={TEXT_INPUT_SIZE}
-          />
-        </View>
-      </SecondaryButton>
-    );
-  }
-
   return (
     <Background style={styles.container}>
       <View
         style={[styles.inputContainer, { marginLeft: LEFT_INFO_MARGIN * 3.7 }]}
       >
-        <Text style={styles.teamInfoText}>TEAM:</Text>
+        <Text style={styles.teamInfoText}>HOME TEAM:</Text>
         <TextInput
           style={styles.input}
-          onChangeText={(text) => inputChangedHandler("teamName", text)}
-          value={teamData.teamName}
+          onChangeText={(text) => inputChangedHandler("home", text)}
+          value={gameData.home}
           maxLength={MAX_TEXT_LENGTH}
         />
       </View>
       <View style={styles.inputContainer}>
-        <Text style={styles.teamInfoText}>MANAGER:</Text>
+        <Text style={styles.teamInfoText}>AWAY TEAM:</Text>
         <TextInput
           style={styles.input}
-          onChangeText={(text) => inputChangedHandler("manager", text)}
-          value={teamData.manager}
+          onChangeText={(text) => inputChangedHandler("away", text)}
+          value={gameData.away}
           maxLength={MAX_TEXT_LENGTH}
         />
       </View>
       <View
         style={[styles.inputContainer, { marginLeft: LEFT_INFO_MARGIN * 2.5 }]}
       >
-        <Text style={styles.teamInfoText}>GROUP:</Text>
+        <Text style={styles.teamInfoText}>DATE:</Text>
         <TextInput
           style={styles.input}
-          onChangeText={(text) => inputChangedHandler("group", text)}
-          value={teamData.group}
-          maxLength={teamData.group !== "TBD" ? 1 : 3}
+          onChangeText={(text) => inputChangedHandler("date", text)}
+          value={gameData.date}
+          placeholder="DD.MM.YYYY"
+          placeholderTextColor="#FFFFFF80"
         />
       </View>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>PLAYERS</Text>
+      <View
+        style={[styles.inputContainer, { marginLeft: LEFT_INFO_MARGIN * 2.5 }]}
+      >
+        <Text style={styles.teamInfoText}>TIME:</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={(text) => inputChangedHandler("time", text)}
+          value={gameData.time}
+          placeholder="HH:MM"
+          placeholderTextColor="#FFFFFF80"
+        />
       </View>
-      <FlatList
-        data={teamData.players}
-        renderItem={({ item: player, index }) => (
-          <View style={styles.playerRow} key={index}>
-            <TextInput
-              style={styles.numberInput}
-              onChangeText={(text) =>
-                inputChangedHandler(`playerNumber-${index}`, text)
-              }
-              value={player.number}
-              placeholder="Number"
-              keyboardType="numeric"
-              maxLength={2}
-            />
-            <TextInput
-              style={styles.playerInput}
-              onChangeText={(text) =>
-                inputChangedHandler(`playerName-${index}`, text)
-              }
-              value={player.name}
-              placeholder="Player"
-              autoCapitalize="words"
-              maxLength={MAX_TEXT_LENGTH}
-            />
-            <PrimaryButton
-              onPress={() => removePlayerHandler(index)}
-              buttonText={"x"}
-              buttonTextStyle={styles.removeText}
-            />
-          </View>
-        )}
-        keyExtractor={(item, index) => `player-${index}`}
-        ListFooterComponent={addPlayerButton}
-      />
-
       <View style={styles.finalButtonsContainer}>
-        <Button
-          style={styles.finalButton}
-          mode="flat"
+        <PrimaryButton
           onPress={() => navigation.goBack()}
-        >
-          Cancel
-        </Button>
-        <Button style={styles.finalButton} onPress={handleButtonPress}>
-          {modifyTeamData !== undefined ? "Modify" : "Add"}
-        </Button>
+          buttonText={"Cancel"}
+          buttonStyle={styles.finalButton}
+          buttonTextStyle={[styles.finalButtonText, { color: "#d98f4e" }]}
+        />
+        <PrimaryButton
+          onPress={handleButtonPress}
+          buttonText={"Add"}
+          buttonStyle={[
+            styles.finalButton,
+            { backgroundColor: "#a4de6e", borderRadius: 4, padding: 8 },
+          ]}
+          buttonTextStyle={[styles.finalButtonText]}
+        />
       </View>
     </Background>
   );
@@ -356,6 +258,10 @@ const styles = StyleSheet.create({
     marginBottom: dimensions.screenWidth * 0.05,
     alignItems: "center",
   },
+  finalButtonText: {
+    color: "white",
+    textAlign: "center",
+  },
 });
 
-export default gamesHandler;
+export default GamesHandler;

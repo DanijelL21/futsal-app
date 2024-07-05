@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import SecondaryButton from "./SecondaryButton";
+import SecondaryButton from "./buttons/SecondaryButton";
 import colors from "../constants/colors";
 import { AuthContext } from "../store/auth-context";
 

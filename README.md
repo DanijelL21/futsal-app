@@ -16,4 +16,18 @@ CREATING A NEW TOURNAMENT
 
 - User create teams.
 
-- User create games
+- User create games. He has a option for auto generating games, and after that he must modify date and time.
+
+- Admin starts game, user can see it live.
+
+ALL GAMES IN GROUP ARE FINISHED
+
+- User go to games. Select Round of 16 and press Generate Games and after that he must modify date and time.
+
+ALL GAMES IN ROUND OF 16 ARE FINISHED
+
+- User go to games. Select Quarter-finals and press Generate Games and after that he must modify date and time.
+
+ALL GAMES IN QUARTER-FINALS ARE FINISHED
+
+- User go to games. Select Semi-finals and press Generate Games and after that he must modify date and time.

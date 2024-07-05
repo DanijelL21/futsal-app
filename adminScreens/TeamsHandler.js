@@ -7,12 +7,11 @@ import {
   FlatList,
   Alert,
 } from "react-native";
-import Button from "./components/Button";
 import colors from "../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import Background from "../components/Background";
-import PrimaryButton from "../components/PrimaryButton";
-import SecondaryButton from "../components/SecondaryButton";
+import PrimaryButton from "../components/buttons/PrimaryButton";
+import SecondaryButton from "../components/buttons/SecondaryButton";
 import dimensions from "../constants/dimensions";
 import { BasicContext } from "../store/basic-context";
 import { AuthContext } from "../store/auth-context";
@@ -36,11 +35,25 @@ function TeamsHandler({ navigation, route }) {
     manager: modifyTeamData ? modifyTeamData.manager : "",
     group: modifyTeamData ? modifyTeamData.group : "TBD",
     players: modifyTeamData
-      ? modifyTeamData.players
+      ? modifyTeamData.players.map((player) => ({
+          ...player,
+          number: player.number.toString(),
+        }))
       : Array.from({ length: DEFAULT_NR_OF_PLAYERS }, (_, index) => ({
           number: (index + 1).toString(),
           name: "",
         })),
+    statistics: modifyTeamData
+      ? modifyTeamData.statistics
+      : {
+          pg: 0,
+          w: 0,
+          l: 0,
+          d: 0,
+          g: [0, 0],
+          gd: 0,
+          p: 0,
+        },
   });
 
   const authCtx = useContext(AuthContext);
@@ -170,11 +183,14 @@ function TeamsHandler({ navigation, route }) {
   };
 
   const addPlayerHandler = () => {
-    const newPlayer = { number: "", name: "" };
-    setTeamData((prevState) => ({
-      ...prevState,
-      players: [...prevState.players, newPlayer],
-    }));
+    setTeamData((prevState) => {
+      const newPlayerNumber = (prevState.players.length + 1).toString();
+      const newPlayer = { number: newPlayerNumber, name: "" };
+      return {
+        ...prevState,
+        players: [...prevState.players, newPlayer],
+      };
+    });
   };
 
   function addPlayerButton() {
@@ -263,16 +279,21 @@ function TeamsHandler({ navigation, route }) {
       />
 
       <View style={styles.finalButtonsContainer}>
-        <Button
-          style={styles.finalButton}
-          mode="flat"
+        <PrimaryButton
           onPress={() => navigation.goBack()}
-        >
-          Cancel
-        </Button>
-        <Button style={styles.finalButton} onPress={handleButtonPress}>
-          {modifyTeamData !== undefined ? "Modify" : "Add"}
-        </Button>
+          buttonText={"Cancel"}
+          buttonStyle={styles.finalButton}
+          buttonTextStyle={[styles.finalButtonText, { color: "#d98f4e" }]}
+        />
+        <PrimaryButton
+          onPress={handleButtonPress}
+          buttonText={"Add"}
+          buttonStyle={[
+            styles.finalButton,
+            { backgroundColor: "#a4de6e", borderRadius: 4, padding: 8 },
+          ]}
+          buttonTextStyle={[styles.finalButtonText]}
+        />
       </View>
     </Background>
   );
@@ -355,6 +376,10 @@ const styles = StyleSheet.create({
     marginTop: dimensions.screenWidth * 0.05,
     marginBottom: dimensions.screenWidth * 0.05,
     alignItems: "center",
+  },
+  finalButtonText: {
+    color: "white",
+    textAlign: "center",
   },
 });
 

@@ -6,6 +6,7 @@ export const BasicContext = createContext({
   name: "",
   setTournamentName: () => {},
   getTournamentName: () => {},
+  startLiveMatch: () => {},
 });
 
 function BasicContextProvider({ children }) {
@@ -13,11 +14,9 @@ function BasicContextProvider({ children }) {
 
   function setTournamentName(name) {
     setName(name);
-    console.log("SET T NAME", name);
   }
 
   function getTournamentName() {
-    console.log("GET NAME", name);
     return name;
   }
 

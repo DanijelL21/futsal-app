@@ -12,7 +12,7 @@ function Stopwatch() {
           const newSeconds = prevSeconds + 1;
           return newSeconds;
         });
-      }, 1000); // if isActive is on, it will change time every 1000 milliseconds
+      }, 1000); // if isActive is on, it will change time every 1 second
     }
 
     return () => {
@@ -24,7 +24,14 @@ function Stopwatch() {
     setIsActive(!isActive);
   };
 
-  return { seconds, handleToggle };
+  const setManualSeconds = (newSeconds) => {
+    const secondsNumber = parseInt(newSeconds, 10);
+    if (!isNaN(secondsNumber)) {
+      setSeconds(secondsNumber);
+    }
+  };
+
+  return { seconds, handleToggle, setManualSeconds };
 }
 
 export default Stopwatch;

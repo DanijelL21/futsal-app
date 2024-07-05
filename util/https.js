@@ -4,21 +4,27 @@ import axios from "axios";
 const BACKEND_URL =
   "https://futsal-app-775db-default-rtdb.europe-west1.firebasedatabase.app/";
 
-export async function getTournaments() {
+export async function getTournaments(tournament_name = null) {
   console.log("GETTING TOURNAMENTS");
+  let data = null;
   try {
-    const response = await axios.get(BACKEND_URL + "/tournaments.json");
-    const data = Object.values(response.data);
-    return data;
+    if (tournament_name !== null) {
+      const response = await axios.get(
+        BACKEND_URL + `/tournaments/${tournament_name}.json`
+      );
+      data = response.data;
+    } else {
+      const response = await axios.get(BACKEND_URL + "/tournaments.json");
+      data = Object.values(response.data);
+    }
+    if (data == null) {
+      return [];
+    } else {
+      return data;
+    }
   } catch (error) {
     console.error("Error getting tournaments:", error);
   }
-}
-
-export async function getAdmin(tournament_name) {
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
-  const response = await axios.get(REQUEST_URL + "/adminMail.json");
-  return response.data;
 }
 
 export async function postData(tournament_name, data, key = null) {
@@ -36,13 +42,29 @@ export async function postData(tournament_name, data, key = null) {
 export async function updateData(tournament_name, data, key, id) {
   console.log("Trying to update data in https", key, id);
   const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
-  return axios.put(REQUEST_URL + `/${key}/${id}.json`, data);
+  return axios.patch(REQUEST_URL + `/${key}/${id}.json`, data);
 }
 
-export function deleteData(tournament_name, id, key) {
+export function deleteData(tournament_name, key, id = null) {
   console.log("Trying to delete data in https", key, id);
   const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
-  return axios.delete(REQUEST_URL + `/${key}/${id}.json`);
+  if (id !== null) {
+    axios.delete(REQUEST_URL + `/${key}/${id}.json`);
+  } else {
+    axios.delete(REQUEST_URL + `/${key}.json`);
+  }
+}
+
+export async function getData(tournament_name, key) {
+  console.log("Trying to get data in https", key);
+  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  try {
+    const response = await axios.get(REQUEST_URL + `/${key}.json`);
+    const data = response.data;
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
 }
 
 // REMOVE type, this was bad try
@@ -103,8 +125,6 @@ export async function getMatchEvents(tournament_name, firebaseKey) {
 }
 
 export async function getTeams(tournament_name) {
-  console.log("Trying to fetch teams in https");
-  console.log(tournament_name);
   const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
   try {
     const response = await axios.get(REQUEST_URL + "/teams.json");
@@ -120,11 +140,11 @@ export async function getTeams(tournament_name) {
   }
 }
 
-export async function getGames(tournament_name) {
+export async function getGames(tournament_name, phase) {
   console.log("Trying to fetch games in https");
   const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
   try {
-    const response = await axios.get(REQUEST_URL + "/games.json");
+    const response = await axios.get(REQUEST_URL + `/games/${phase}.json`);
     if (!response.data || Object.keys(response.data).length === 0) {
       return [];
     }
@@ -134,5 +154,19 @@ export async function getGames(tournament_name) {
     return teams;
   } catch (error) {
     console.error("Error fetching games in https:", error);
+  }
+}
+
+// this should be combined with some other function
+export async function getGame(tournament_name, phase, firebaseKey) {
+  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  try {
+    const response = await axios.get(
+      REQUEST_URL + `/games/${phase}/${firebaseKey}.json`
+    );
+    const data = response.data;
+    return data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
   }
 }

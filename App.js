@@ -8,8 +8,10 @@ import MainScreen from "./screens/NewsScreen.js";
 import MatchScreen from "./screens/TournamentScreen/MatchScreen.js";
 import TournamentsOverviewScreen from "./screens/TournamentsOverviewScreen.tsx";
 import MainTournamentScreen from "./screens/TournamentScreen/MainTournamentScreen.js";
+import TableScreen from "./screens/TournamentScreen/TableScreen";
 import TeamsScreen from "./screens/TournamentScreen/TeamsScreen.js";
-import TestScreen from "./screens/TestScreen.js";
+import LeaguesScreen from "./screens/LeaguesScreen.js";
+import GamesHandler from "./adminScreens/GamesHandler";
 import GamesScreen from "./screens/TournamentScreen/GamesScreen.js";
 import TeamDetailsScreen from "./screens/TournamentScreen/TeamDetailsScreen.js";
 import LiveMatchScreen from "./adminScreens/LiveMatchScreen.js";
@@ -19,6 +21,7 @@ import { StatusBar } from "expo-status-bar";
 import dimensions from "./constants/dimensions";
 import AuthContextProvider from "./store/auth-context";
 import BasicContextProvider from "./store/basic-context";
+
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();
 
@@ -62,12 +65,14 @@ function MainStack() {
         }}
       />
       <BottomTab.Screen
-        name="TestScreen"
-        component={TestScreen}
+        name="LeaguesScreen"
+        component={LeaguesScreen}
         options={{
+          title: "Leagues",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="football-outline" size={size} color={color} />
+            <Ionicons name="calendar-clear-outline" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <BottomTab.Screen
@@ -116,6 +121,7 @@ export default function App() {
               component={MainTournamentScreen}
             />
             <Stack.Screen name="Teams" component={TeamsScreen} />
+            <Stack.Screen name="Tables" component={TableScreen} />
             <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} />
             <Stack.Screen
               name="HandleTeams"
@@ -128,6 +134,16 @@ export default function App() {
               }}
             />
             <Stack.Screen name="Games" component={GamesScreen} />
+            <Stack.Screen
+              name="HandleGames"
+              component={GamesHandler}
+              options={{
+                presentation: "modal",
+                title: "Add Game",
+                headerLeft: null,
+                tabBarVisible: false,
+              }}
+            />
             <Stack.Screen
               name="GameStack"
               component={GameStack}
@@ -146,6 +162,7 @@ export default function App() {
                   <Ionicons name="hammer-outline" size={size} color={color} />
                 ),
                 headerLeft: null,
+                title: "Live",
               }}
             />
           </Stack.Navigator>

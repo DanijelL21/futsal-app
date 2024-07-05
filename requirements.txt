@@ -11,3 +11,7 @@ npm install react-native-pager-view
 npx expo install expo-linear-gradient
 
 npm install @react-native-async-storage/async-storage
+
+npm install react-native-dropdown-select-list
+
+npm install @react-native-community/datetimepicker

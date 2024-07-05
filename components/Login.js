@@ -1,22 +1,45 @@
 import { useState, useContext } from "react";
-import { View, StyleSheet, Modal, TextInput, Button } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Modal,
+  TextInput,
+  Button,
+  Alert,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import SecondaryButton from "./SecondaryButton";
+import SecondaryButton from "./buttons/SecondaryButton";
 import colors from "../constants/colors";
 import { login } from "../util/auth";
 import { AuthContext } from "../store/auth-context";
-
+import { BasicContext } from "../store/basic-context";
+import { getTournaments } from "../util/https";
 function LoginScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const authCtx = useContext(AuthContext);
+  const basicCtx = useContext(BasicContext);
+  const tournament_name = basicCtx.getTournamentName();
 
   async function handleLogin() {
     console.log("Logging in with:", username, password);
+
     const token = await login(username, password);
-    authCtx.authenticate(token);
+    const tournament = await getTournaments(tournament_name);
+
+    console.log(tournament);
+    // check if that admin is for correct tournament
+    if (username === tournament.adminMail) {
+      authCtx.authenticate({ token: token, tournament_name: tournament_name });
+      console.log("DID IT");
+    } else {
+      Alert.alert(
+        "Authentication failed!",
+        "This user is not autenticated for this tournament"
+      );
+    }
     setIsModalVisible(false);
   }
 

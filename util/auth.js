@@ -1,6 +1,5 @@
 import axios from "axios";
 import { Alert } from "react-native";
-import { getAdmin } from "./https";
 
 const API_KEY = "AIzaSyC9acsS8HUNpGuTnjTultHiQzPPRGDPnlE";
 
@@ -15,7 +14,6 @@ export async function login(email, password) {
     });
 
     const token = response.data.idToken;
-
     return token;
   } catch (error) {
     console.log(error);
@@ -23,14 +21,6 @@ export async function login(email, password) {
       "Authentication failed!",
       "Could not log you in. Please check your credentials or try again later!"
     );
+    return "";
   }
 }
-
-// export async function isAdmin(username, token) {
-//   const AdminMail = getAdmin();
-//   if (token && username == AdminMail) {
-//     return true;
-//   } else {
-//     return false;
-//   }
-// }

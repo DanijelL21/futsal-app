@@ -1,7 +1,7 @@
 import { Text, View, FlatList, StyleSheet, Alert } from "react-native";
 import { useEffect, useCallback, useState, useContext } from "react";
-import PrimaryButton from "../../components/PrimaryButton";
-import SecondaryButton from "../../components/SecondaryButton";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import SecondaryButton from "../../components/buttons/SecondaryButton";
 import { getTeamDetails } from "../../util/https";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,7 +11,7 @@ import dimensions from "../../constants/dimensions";
 import colors from "../../constants/colors";
 import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
-
+import LoadinSpinner from "../../components/LoadingSpinner";
 const MODIFY_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const MODIFY_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TITLE_SIZE = dimensions.screenWidth * 0.0625;
@@ -19,6 +19,8 @@ const PLAYER_INFO_SIZE = dimensions.screenWidth * 0.0375;
 
 function TeamDetailsScreen({ navigation, route }) {
   const [teamData, setTeamData] = useState({});
+  const [loading, setLoading] = useState(true);
+
   const key = route.params.firebaseKey;
 
   const authCtx = useContext(AuthContext);
@@ -34,6 +36,8 @@ function TeamDetailsScreen({ navigation, route }) {
           setTeamData(teamDetails);
         } catch (error) {
           console.error("Error fetching teams:", error);
+        } finally {
+          setLoading(false);
         }
       }
       fetchTeamDetails();
@@ -46,7 +50,16 @@ function TeamDetailsScreen({ navigation, route }) {
     });
   }, [teamData, navigation]);
 
+  if (loading) {
+    return (
+      <Background>
+        <LoadinSpinner />
+      </Background>
+    );
+  }
+
   function modifyTeam() {
+    console.log(teamData);
     navigation.navigate("HandleTeams", {
       modifyTeamData: teamData,
     });
@@ -98,7 +111,7 @@ function TeamDetailsScreen({ navigation, route }) {
             onPress={() =>
               Alert.alert(
                 "Confirm Changes",
-                `Are you sure you want to add team?`,
+                `Are you sure you want to delete team?`,
                 [
                   {
                     text: "Cancel",
@@ -110,8 +123,8 @@ function TeamDetailsScreen({ navigation, route }) {
                     onPress: async () => {
                       await deleteData(
                         tournament_name,
-                        teamData.firebaseKey,
-                        "teams"
+                        "teams",
+                        teamData.firebaseKey
                       );
                       navigation.goBack();
                     },

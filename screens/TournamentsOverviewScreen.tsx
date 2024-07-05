@@ -1,15 +1,14 @@
 import { StyleSheet, Text, View, Animated, Pressable } from "react-native";
 import type { PagerViewOnPageScrollEventData } from "react-native-pager-view";
-import { useRef, useEffect, useState, useContext } from "react";
+import { useRef, useEffect, useState } from "react";
 import PagerView from "react-native-pager-view";
-import data from "../dummy/dummy_data";
 import Background from "../components/Background";
 import colors from "../constants/colors";
 import dimensions from "../constants/dimensions";
-import PrimaryButton from "../components/PrimaryButton";
+import PrimaryButton from "../components/buttons/PrimaryButton";
 import { getTournaments } from "../util/https";
-import { BasicContext } from "../store/basic-context";
-
+import LoadinSpinner from "../components/LoadingSpinner";
+import NoItems from "../components/NoItemsDisplayer";
 const DOT_SIZE = dimensions.screenWidth * 0.15;
 const TITLE_SIZE = dimensions.screenWidth * 0.075;
 const IMAGE_SIZE = dimensions.screenWidth * 0.6;
@@ -45,7 +44,10 @@ const Item = ({
   date,
   scrollOffsetAnimatedValue,
   navigation,
+  setLoadingImages,
 }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
   const inputRange = [0, 0.5, 0.99];
   const inputRangeOpacity = [0, 0.5, 0.99];
   const scale = scrollOffsetAnimatedValue.interpolate({
@@ -64,39 +66,36 @@ const Item = ({
       tournamentPicture: imageUri,
     });
   };
-  console.log("DATE", date);
-  console.log("NAME", name);
-  console.log("IMAGEURI", imageUri);
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    setLoadingImages(false);
+  };
+
   return (
     <View style={styles.itemStyle}>
       <Pressable onPress={handleImagePress}>
         {({ pressed }) => (
-          <Animated.Image
-            source={{
-              uri: imageUri,
-            }}
-            style={[
-              styles.image,
-              {
-                transform: [{ scale }],
-                opacity: pressed ? 0.8 : 1,
-              },
-            ]}
-          />
+          <>
+            <Animated.Image
+              source={{ uri: imageUri }}
+              style={[
+                styles.image,
+                {
+                  transform: [{ scale }],
+                  opacity: isLoading ? 0 : pressed ? 0.8 : 1,
+                },
+              ]}
+              onLoad={handleImageLoad}
+            />
+          </>
         )}
       </Pressable>
-      <View style={styles.dateContainer}>
-        <Animated.Text
-          style={[
-            styles.date,
-            {
-              opacity,
-            },
-          ]}
-        >
-          {date}
-        </Animated.Text>
-      </View>
+      {!isLoading && (
+        <Animated.View style={[styles.dateContainer, { opacity }]}>
+          <Animated.Text style={styles.date}>{date}</Animated.Text>
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -142,27 +141,51 @@ const Pagination = ({
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 
 export default function TournamentsOverviewScreen({ navigation, route }) {
-  // const [data, setData] = useState([]);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingImages, setLoadingImages] = useState(true); // Centralized loading state for images
   const scrollOffsetAnimatedValue = useRef(new Animated.Value(0)).current;
   const positionAnimatedValue = useRef(new Animated.Value(0)).current;
 
   // get data
 
-  // useEffect(() => {
-  //   async function fetchTournaments() {
-  //     const tournamentsData = await getTournaments();
-  //     setData(tournamentsData);
-  //   }
-  //   fetchTournaments();
-  // }, [navigation]);
+  useEffect(() => {
+    async function fetchTournaments() {
+      try {
+        const tournamentsData = await getTournaments();
+        setData(tournamentsData);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTournaments();
+  }, [navigation]);
+
+  if (loading) {
+    return (
+      <Background>
+        <LoadinSpinner />
+      </Background>
+    );
+  }
+
+  if (data.length == 0) {
+    return <NoItems text={"NO TOURNAMENTS FOR NOW"} />;
+  }
 
   return (
     <Background>
-      <Title
-        data={data}
-        scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
-        positionAnimatedValue={positionAnimatedValue}
-      />
+      {loadingImages ? (
+        <LoadinSpinner />
+      ) : (
+        <Title
+          data={data}
+          scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
+          positionAnimatedValue={positionAnimatedValue}
+        />
+      )}
       <AnimatedPagerView
         initialPage={0}
         style={{ width: "100%", height: "100%" }}
@@ -187,26 +210,31 @@ export default function TournamentsOverviewScreen({ navigation, route }) {
               scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
               positionAnimatedValue={positionAnimatedValue}
               navigation={navigation}
+              setLoadingImages={setLoadingImages} // Pass setLoadingImages to Item component
             />
           </View>
         ))}
       </AnimatedPagerView>
-
-      {/* THIS ARE LITTLE CIRCLES WHICH DINAMICALLY CHANGES */}
-      <Pagination
-        data={data}
-        scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
-        positionAnimatedValue={positionAnimatedValue}
-      />
-      <View style={styles.textContainer}>
-        <PrimaryButton
-          onPress={() => {}}
-          buttonText={
-            "To create tournament, please contact leonimail100@gmail.com"
-          }
-          buttonTextStyle={styles.text}
-        />
-      </View>
+      {loadingImages ? (
+        <LoadinSpinner />
+      ) : (
+        <>
+          <Pagination
+            data={data}
+            scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
+            positionAnimatedValue={positionAnimatedValue}
+          />
+          <View style={styles.textContainer}>
+            <PrimaryButton
+              onPress={() => {}}
+              buttonText={
+                "To create tournament, please contact leonimail100@gmail.com"
+              }
+              buttonTextStyle={styles.text}
+            />
+          </View>
+        </>
+      )}
     </Background>
   );
 }
@@ -280,5 +308,10 @@ const styles = StyleSheet.create({
   text: {
     color: "white",
     fontSize: 12,
+  },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
