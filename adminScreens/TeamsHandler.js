@@ -14,14 +14,14 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import SecondaryButton from "../components/buttons/SecondaryButton";
 import dimensions from "../constants/dimensions";
 import { BasicContext } from "../store/basic-context";
-import { AuthContext } from "../store/auth-context";
+import { validateTeamDataInput } from "../components/InputValidator";
 import { updateData, postData } from "../util/https";
 const DEFAULT_NR_OF_PLAYERS = 13;
-const MAX_TEXT_LENGTH = dimensions.screenWidth * 0.05; // 20
-const TEXT_INPUT_SIZE = dimensions.screenWidth * 0.05; // INPUT SIZE
+const MAX_TEXT_LENGTH = 30;
+const TEXT_INPUT_SIZE = dimensions.screenWidth * 0.05;
 
 // this is calculated dinamically. DON'T TOUCH
-const TEXT_INFO_SIZE = TEXT_INPUT_SIZE * 0.85; // TEAM, MANAGER,...
+const TEXT_INFO_SIZE = TEXT_INPUT_SIZE * 0.85;
 const BOXES_HEIGHT = TEXT_INPUT_SIZE * 2;
 const BOXES_MARGIN = dimensions.screenWidth * 0.025;
 const LEFT_INFO_MARGIN = TEXT_INFO_SIZE * 0.5882;
@@ -56,10 +56,9 @@ function TeamsHandler({ navigation, route }) {
         },
   });
 
-  const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated;
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
   // set title
   useEffect(() => {
@@ -113,22 +112,8 @@ function TeamsHandler({ navigation, route }) {
     });
   }
 
-  function validateInput() {
-    isValid = false;
-
-    if (teamData.teamName.length < 2) {
-      message = `Team name should have minimum of 2 letters`;
-    } else if (teamData.manager.length > MAX_TEXT_LENGTH) {
-      message = `Manager name should have less then ${MAX_TEXT_LENGTH} characters`;
-    } else {
-      isValid = true;
-      message = "";
-    }
-    return { isValid: isValid, message: message };
-  }
-
   const handleButtonPress = () => {
-    const { isValid, message } = validateInput(teamData);
+    const { isValid, message } = validateTeamDataInput(teamData);
 
     if (!isValid) {
       Alert.alert("Validation Error", message);
@@ -137,18 +122,18 @@ function TeamsHandler({ navigation, route }) {
     if (modifyTeamData !== undefined) {
       Alert.alert(
         "Confirm Changes",
-        `Are you sure you want to add team?`,
+        `Are you sure you want to modify team?`,
         [
           {
             text: "Cancel",
             style: "cancel",
           },
           {
-            text: "Add",
+            text: "Modify",
             style: "destructive",
             onPress: async () => {
               await updateData(
-                tournament_name,
+                tournamentName,
                 teamData,
                 "teams",
                 modifyTeamData.firebaseKey
@@ -172,7 +157,7 @@ function TeamsHandler({ navigation, route }) {
             text: "Add",
             style: "destructive",
             onPress: async () => {
-              await postData(tournament_name, teamData, "teams");
+              await postData(tournamentName, teamData, "teams");
               navigation.goBack();
             },
           },
@@ -241,7 +226,7 @@ function TeamsHandler({ navigation, route }) {
         />
       </View>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>PLAYERS</Text>
+        <Text style={styles.headerText}>PLAYER</Text>
       </View>
       <FlatList
         data={teamData.players}
@@ -276,6 +261,7 @@ function TeamsHandler({ navigation, route }) {
         )}
         keyExtractor={(item, index) => `player-${index}`}
         ListFooterComponent={addPlayerButton}
+        scrollIndicatorInsets={{ right: 1 }}
       />
 
       <View style={styles.finalButtonsContainer}>
@@ -283,14 +269,21 @@ function TeamsHandler({ navigation, route }) {
           onPress={() => navigation.goBack()}
           buttonText={"Cancel"}
           buttonStyle={styles.finalButton}
-          buttonTextStyle={[styles.finalButtonText, { color: "#d98f4e" }]}
+          buttonTextStyle={[
+            styles.finalButtonText,
+            { color: colors.cancelButtonColor },
+          ]}
         />
         <PrimaryButton
           onPress={handleButtonPress}
-          buttonText={"Add"}
+          buttonText={modifyTeamData !== undefined ? "Modify" : "Add"}
           buttonStyle={[
             styles.finalButton,
-            { backgroundColor: "#a4de6e", borderRadius: 4, padding: 8 },
+            {
+              backgroundColor: colors.confirmButtonColor,
+              borderRadius: 4,
+              padding: 8,
+            },
           ]}
           buttonTextStyle={[styles.finalButtonText]}
         />
@@ -365,11 +358,14 @@ const styles = StyleSheet.create({
   },
   finalButton: {
     minWidth: dimensions.screenWidth * 0.3,
+    height: dimensions.screenWidth * 0.08,
     marginHorizontal: dimensions.screenWidth * 0.025,
+    justifyContent: "center",
+    alignItems: "center",
   },
   removeText: {
     fontSize: TEXT_INPUT_SIZE * 1.5,
-    color: "red",
+    color: colors.redNoticeColor,
     marginLeft: dimensions.screenWidth * 0.0375,
   },
   addPlayer: {
@@ -378,8 +374,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   finalButtonText: {
-    color: "white",
+    color: colors.headerTextColor,
     textAlign: "center",
+    fontSize: dimensions.screenWidth * 0.035,
   },
 });
 

@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button, View, Modal, StyleSheet, Text } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-
-const TimeModifier = ({ visible, seconds, setManualSeconds, onClose }) => {
+import dimensions from "../../constants/dimensions";
+import colors from "../../constants/colors";
+const TimeModifier = ({
+  visible,
+  seconds,
+  matchLength,
+  setManualSeconds,
+  onClose,
+}) => {
   const [selectedMinute, setSelectedMinute] = useState("0");
   const [selectedSecond, setSelectedSecond] = useState("0");
 
@@ -24,7 +31,7 @@ const TimeModifier = ({ visible, seconds, setManualSeconds, onClose }) => {
     <Modal transparent={true} animationType="slide" visible={visible}>
       <View style={styles.modalContainer}>
         <View style={styles.pickerContainer}>
-          <Text>Modify Time</Text>
+          <Text style={styles.title}>Modify Time</Text>
           <View style={styles.pickerWrapper}>
             <Picker
               selectedValue={selectedMinute}
@@ -32,7 +39,7 @@ const TimeModifier = ({ visible, seconds, setManualSeconds, onClose }) => {
               onValueChange={(itemValue) => setSelectedMinute(itemValue)}
               numberOfLines={1}
             >
-              {Array.from({ length: 31 }, (_, i) => (
+              {Array.from({ length: matchLength }, (_, i) => (
                 <Picker.Item key={i} label={`${i}`} value={`${i}`} />
               ))}
             </Picker>
@@ -64,12 +71,15 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   pickerContainer: {
-    width: 300,
+    width: dimensions.screenWidth * 0.7,
     padding: 20,
-    backgroundColor: "white",
+    backgroundColor: colors.headerTextColor,
     borderRadius: 10,
     alignItems: "center",
     alignContent: "center",
+  },
+  title: {
+    fontSize: dimensions.screenWidth * 0.03,
   },
   pickerWrapper: {
     flexDirection: "row",
@@ -77,8 +87,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   picker: {
-    width: 100,
-    height: 150,
+    width: dimensions.screenWidth * 0.3,
+    height: dimensions.screenWidth * 0.4,
   },
 });
 

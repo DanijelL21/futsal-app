@@ -4,6 +4,8 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import SecondaryButton from "./buttons/SecondaryButton";
 import colors from "../constants/colors";
 import { AuthContext } from "../store/auth-context";
+import dimensions from "../constants/dimensions";
+const ICON_SIZE = dimensions.screenWidth * 0.04;
 
 function LogOutScreen() {
   const authCtx = useContext(AuthContext);
@@ -31,7 +33,11 @@ function LogOutScreen() {
     <View>
       <SecondaryButton onPress={() => handleLogOut()}>
         <View style={styles.iconContainer}>
-          <Ionicons name="log-out" color={colors.headerTextColor} size={25} />
+          <Ionicons
+            name="log-out"
+            color={colors.headerTextColor}
+            size={ICON_SIZE}
+          />
         </View>
       </SecondaryButton>
     </View>

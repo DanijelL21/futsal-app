@@ -8,12 +8,13 @@ import {
   PenaltyButton,
   PenaltyMissedButton,
 } from "./IconButtons";
+import dimensions from "../../constants/dimensions";
 
-const IconButtonsList = ({ team, seconds, handleIconPress }) => {
+const IconButtonsList = ({ team, mode, seconds, handleIconPress }) => {
   return (
     <View style={styles.container}>
       <View style={styles.rowContainer}>
-        {handleIconPress && (
+        {mode === "Regular game" ? (
           <>
             <View style={styles.columnContainer}>
               <GoalButton
@@ -52,6 +53,19 @@ const IconButtonsList = ({ team, seconds, handleIconPress }) => {
               />
             </View>
           </>
+        ) : (
+          <View style={styles.rowContainer}>
+            <PenaltyButton
+              team={team}
+              seconds={seconds}
+              handleIconPress={handleIconPress}
+            />
+            <PenaltyMissedButton
+              team={team}
+              seconds={seconds}
+              handleIconPress={handleIconPress}
+            />
+          </View>
         )}
       </View>
     </View>
@@ -66,7 +80,7 @@ const styles = StyleSheet.create({
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-around", // Center items horizontally with space around each column
-    marginBottom: 10, // Add some margin between rows
+    marginBottom: dimensions.screenWidth * 0.02, // Add some margin between rows
   },
   columnContainer: {
     flexDirection: "column",

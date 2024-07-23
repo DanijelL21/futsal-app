@@ -40,3 +40,33 @@ export function validateGameDataInput(gameData) {
 
   return { isValid: isValid, message: message };
 }
+
+const validatePlayersNumber = (players) => {
+  const filteredPlayers = players.filter((player) => player.name !== "");
+  const numbers = filteredPlayers.map((player) => player.number);
+  const uniqueNumbers = new Set(numbers);
+  const areNumbersValid = numbers.every(
+    (number) => !isNaN(number) && number !== ""
+  );
+  return numbers.length === uniqueNumbers.size && areNumbersValid;
+};
+
+export function validateTeamDataInput(teamData) {
+  console.log(teamData);
+  isValid = false;
+
+  if (teamData.teamName.length < 2) {
+    message = `Team name should have minimum of 2 letters`;
+  } else if (
+    teamData.group.length !== 1 ||
+    !"ABCDEFGH".includes(teamData.group)
+  ) {
+    message = `Group should be a single letter between A and H`;
+  } else if (!validatePlayersNumber(teamData.players)) {
+    message = `Each player must have a unique number that is not empty and must be a valid number, ignoring players without names`;
+  } else {
+    isValid = true;
+    message = "";
+  }
+  return { isValid: isValid, message: message };
+}

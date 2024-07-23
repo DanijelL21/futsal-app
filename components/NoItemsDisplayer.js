@@ -1,15 +1,16 @@
 import React from "react";
 import { Text, StyleSheet, View } from "react-native";
 import Background from "../components/Background.js";
-
-function NoItems({ text }) {
-  return (
-    <Background>
-      <View style={styles.container}>
-        <Text style={styles.text}>{text}</Text>
-      </View>
-    </Background>
+import dimensions from "../constants/dimensions.js";
+import colors from "../constants/colors.js";
+function NoItemsDisplayer({ text, includeBackground = true }) {
+  const content = (
+    <View style={styles.container}>
+      <Text style={styles.text}>{text}</Text>
+    </View>
   );
+
+  return includeBackground ? <Background>{content}</Background> : content;
 }
 
 const styles = StyleSheet.create({
@@ -19,9 +20,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    color: "white",
-    fontSize: 20,
+    color: colors.headerTextColor,
+    fontSize: dimensions.screenWidth * 0.05,
   },
 });
 
-export default NoItems;
+export default NoItemsDisplayer;

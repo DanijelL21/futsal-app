@@ -1,35 +1,27 @@
 import axios from "axios";
-// for now we suppose that user created torunament
 
 const BACKEND_URL =
   "https://futsal-app-775db-default-rtdb.europe-west1.firebasedatabase.app/";
 
-export async function getTournaments(tournament_name = null) {
-  console.log("GETTING TOURNAMENTS");
-  let data = null;
+export async function getTournaments(tournamentName = null) {
   try {
-    if (tournament_name !== null) {
-      const response = await axios.get(
-        BACKEND_URL + `/tournaments/${tournament_name}.json`
-      );
-      data = response.data;
-    } else {
-      const response = await axios.get(BACKEND_URL + "/tournaments.json");
-      data = Object.values(response.data);
-    }
-    if (data == null) {
-      return [];
-    } else {
-      return data;
-    }
+    const endpoint = tournamentName
+      ? `/tournaments/${tournamentName}.json`
+      : "/tournaments.json";
+
+    const response = await axios.get(BACKEND_URL + endpoint);
+    const data = response.data;
+
+    return data ? (tournamentName ? data : Object.values(data)) : [];
   } catch (error) {
     console.error("Error getting tournaments:", error);
+    return [];
   }
 }
 
-export async function postData(tournament_name, data, key = null) {
+export async function postData(tournamentName, data, key = null) {
   console.log("Trying to put in https", key);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   if (key !== null) {
     post_path = `${REQUEST_URL}/${key}.json`;
   } else {
@@ -39,15 +31,15 @@ export async function postData(tournament_name, data, key = null) {
   return response;
 }
 
-export async function updateData(tournament_name, data, key, id) {
+export async function updateData(tournamentName, data, key, id) {
   console.log("Trying to update data in https", key, id);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   return axios.patch(REQUEST_URL + `/${key}/${id}.json`, data);
 }
 
-export function deleteData(tournament_name, key, id = null) {
+export function deleteData(tournamentName, key, id = null) {
   console.log("Trying to delete data in https", key, id);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   if (id !== null) {
     axios.delete(REQUEST_URL + `/${key}/${id}.json`);
   } else {
@@ -55,9 +47,9 @@ export function deleteData(tournament_name, key, id = null) {
   }
 }
 
-export async function getData(tournament_name, key) {
+export async function getData(tournamentName, key) {
   console.log("Trying to get data in https", key);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(REQUEST_URL + `/${key}.json`);
     const data = response.data;
@@ -68,9 +60,9 @@ export async function getData(tournament_name, key) {
 }
 
 // REMOVE type, this was bad try
-export async function getTeamDetails(tournament_name, firebaseKey) {
+export async function getTeamDetails(tournamentName, firebaseKey) {
   console.log("Trying to fetch data", `/teams/${firebaseKey}.json`);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(
       REQUEST_URL + `/teams/${firebaseKey}.json`
@@ -86,9 +78,9 @@ export async function getTeamDetails(tournament_name, firebaseKey) {
 }
 
 // if I won't use this multiple times, move this transform logic
-export async function getMatchEvents(tournament_name, firebaseKey) {
+export async function getMatchEvents(tournamentName, firebaseKey) {
   console.log("Trying to fetch events", `/events/${firebaseKey}.json`);
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(
       REQUEST_URL + `/events/${firebaseKey}.json`
@@ -124,8 +116,8 @@ export async function getMatchEvents(tournament_name, firebaseKey) {
   }
 }
 
-export async function getTeams(tournament_name) {
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+export async function getTeams(tournamentName) {
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(REQUEST_URL + "/teams.json");
     if (!response.data || Object.keys(response.data).length === 0) {
@@ -140,9 +132,9 @@ export async function getTeams(tournament_name) {
   }
 }
 
-export async function getGames(tournament_name, phase) {
+export async function getGames(tournamentName, phase) {
   console.log("Trying to fetch games in https");
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(REQUEST_URL + `/games/${phase}.json`);
     if (!response.data || Object.keys(response.data).length === 0) {
@@ -158,8 +150,8 @@ export async function getGames(tournament_name, phase) {
 }
 
 // this should be combined with some other function
-export async function getGame(tournament_name, phase, firebaseKey) {
-  const REQUEST_URL = `${BACKEND_URL}${tournament_name}`;
+export async function getGame(tournamentName, phase, firebaseKey) {
+  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   try {
     const response = await axios.get(
       REQUEST_URL + `/games/${phase}/${firebaseKey}.json`

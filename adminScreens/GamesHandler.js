@@ -4,11 +4,13 @@ import colors from "../constants/colors";
 import Background from "../components/Background";
 import dimensions from "../constants/dimensions";
 import { BasicContext } from "../store/basic-context";
-import { updateData, postData } from "../util/https";
+import { updateData, postData, deleteData } from "../util/https";
 import { validateGameDataInput } from "../components/InputValidator";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import idGenerator from "../components/IdGenerator";
-const MAX_TEXT_LENGTH = dimensions.screenWidth * 0.05; // 20
+import IoniconsButton from "../components/buttons/IoniconsButton";
+import TeamsListModal from "./components/TeamsListModal";
+
 const TEXT_INPUT_SIZE = dimensions.screenWidth * 0.05; // INPUT SIZE
 
 // this is calculated dinamically. DON'T TOUCH
@@ -18,7 +20,7 @@ const BOXES_MARGIN = dimensions.screenWidth * 0.025;
 const LEFT_INFO_MARGIN = TEXT_INFO_SIZE * 0.5882;
 
 function GamesHandler({ navigation, route }) {
-  const torunamentPhase = route.params.torunamentPhase;
+  const torunamentPhase = route.params.tournamentPhase;
   const modifyGame = route.params.modifyGameData;
   const [gameData, setGameData] = useState({
     id: modifyGame ? modifyGame.id : "",
@@ -27,9 +29,12 @@ function GamesHandler({ navigation, route }) {
     date: modifyGame ? modifyGame.date : "",
     time: modifyGame ? modifyGame.time : "",
   });
+  const [modalVisible, setModalVisible] = useState(false);
+  const [teamType, setTeamType] = useState("home");
 
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
   // set title
   useEffect(() => {
@@ -48,7 +53,7 @@ function GamesHandler({ navigation, route }) {
   }
 
   async function generateNextId() {
-    const nextId = await idGenerator(tournament_name, torunamentPhase);
+    const nextId = await idGenerator(tournamentName, torunamentPhase);
     gameData.id = nextId;
   }
 
@@ -74,7 +79,7 @@ function GamesHandler({ navigation, route }) {
             style: "destructive",
             onPress: async () => {
               await updateData(
-                tournament_name,
+                tournamentName,
                 gameData,
                 `games/${torunamentPhase}`,
                 modifyGame.firebaseKey
@@ -100,7 +105,7 @@ function GamesHandler({ navigation, route }) {
             style: "destructive",
             onPress: async () => {
               await postData(
-                tournament_name,
+                tournamentName,
                 gameData,
                 `games/${torunamentPhase}`
               );
@@ -113,26 +118,40 @@ function GamesHandler({ navigation, route }) {
     }
   };
 
+  const openTeamModal = (type) => {
+    setTeamType(type);
+    setModalVisible(true);
+  };
+
   return (
     <Background style={styles.container}>
+      <TeamsListModal
+        tournamentName={tournamentName}
+        visible={modalVisible}
+        setTeam={(identifier, team) => inputChangedHandler(identifier, team)}
+        teamType={teamType}
+        onClose={() => {
+          setModalVisible(false);
+        }}
+      />
       <View
         style={[styles.inputContainer, { marginLeft: LEFT_INFO_MARGIN * 3.7 }]}
       >
         <Text style={styles.teamInfoText}>HOME TEAM:</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={(text) => inputChangedHandler("home", text)}
-          value={gameData.home}
-          maxLength={MAX_TEXT_LENGTH}
+        <PrimaryButton
+          onPress={() => openTeamModal("home")}
+          buttonText={gameData.home || "Select Home Team"}
+          buttonStyle={styles.teamInput}
+          buttonTextStyle={styles.inputText}
         />
       </View>
       <View style={styles.inputContainer}>
         <Text style={styles.teamInfoText}>AWAY TEAM:</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={(text) => inputChangedHandler("away", text)}
-          value={gameData.away}
-          maxLength={MAX_TEXT_LENGTH}
+        <PrimaryButton
+          onPress={() => openTeamModal("away")}
+          buttonText={gameData.away || "Select Away Team"}
+          buttonStyle={styles.teamInput}
+          buttonTextStyle={styles.inputText}
         />
       </View>
       <View
@@ -164,18 +183,59 @@ function GamesHandler({ navigation, route }) {
           onPress={() => navigation.goBack()}
           buttonText={"Cancel"}
           buttonStyle={styles.finalButton}
-          buttonTextStyle={[styles.finalButtonText, { color: "#d98f4e" }]}
+          buttonTextStyle={[
+            styles.finalButtonText,
+            { color: colors.cancelButtonColor },
+          ]}
         />
         <PrimaryButton
           onPress={handleButtonPress}
           buttonText={"Add"}
           buttonStyle={[
             styles.finalButton,
-            { backgroundColor: "#a4de6e", borderRadius: 4, padding: 8 },
+            {
+              backgroundColor: colors.confirmButtonColor,
+              borderRadius: 4,
+              padding: 8,
+            },
           ]}
           buttonTextStyle={[styles.finalButtonText]}
         />
       </View>
+      {modifyGame && (
+        <View style={styles.deleteContainer}>
+          <IoniconsButton
+            icon="trash"
+            size={36}
+            color={colors.redNoticeColor}
+            onPress={() =>
+              Alert.alert(
+                "Confirm Changes",
+                `Are you sure you want to delete team?`,
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Add",
+                    style: "destructive",
+                    onPress: async () => {
+                      await deleteData(
+                        tournamentName,
+                        `games/${torunamentPhase}/`,
+                        modifyGame.firebaseKey
+                      );
+                      navigation.goBack();
+                    },
+                  },
+                ],
+                { cancelable: false }
+              )
+            }
+          />
+        </View>
+      )}
     </Background>
   );
 }
@@ -202,6 +262,19 @@ const styles = StyleSheet.create({
     color: colors.headerTextColor,
     marginLeft: LEFT_INFO_MARGIN,
     textAlign: "center",
+    fontSize: TEXT_INPUT_SIZE,
+  },
+  teamInput: {
+    flex: 1,
+    height: BOXES_HEIGHT,
+    borderWidth: 1,
+    borderColor: colors.headerTextColor,
+    marginLeft: LEFT_INFO_MARGIN,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inputText: {
+    color: colors.headerTextColor,
     fontSize: TEXT_INPUT_SIZE,
   },
   headerContainer: {
@@ -246,11 +319,14 @@ const styles = StyleSheet.create({
   },
   finalButton: {
     minWidth: dimensions.screenWidth * 0.3,
+    height: dimensions.screenWidth * 0.08,
     marginHorizontal: dimensions.screenWidth * 0.025,
+    justifyContent: "center",
+    alignItems: "center",
   },
   removeText: {
     fontSize: TEXT_INPUT_SIZE * 1.5,
-    color: "red",
+    color: colors.redNoticeColor,
     marginLeft: dimensions.screenWidth * 0.0375,
   },
   addPlayer: {
@@ -259,8 +335,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   finalButtonText: {
-    color: "white",
+    color: colors.headerTextColor,
     textAlign: "center",
+    fontSize: dimensions.screenWidth * 0.035,
+  },
+  deleteContainer: {
+    alignContent: "center",
+    alignItems: "center",
+    marginTop: dimensions.screenWidth * 0.025,
+    marginBottom: dimensions.screenWidth * 0.1,
   },
 });
 

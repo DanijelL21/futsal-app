@@ -10,6 +10,7 @@ import dimensions from "../../constants/dimensions";
 import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
 import LoadinSpinner from "../../components/LoadingSpinner";
+import NoItemsDisplayer from "../../components/NoItemsDisplayer";
 const ADD_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const ADD_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TEAM_PADDING = dimensions.screenWidth * 0.0375;
@@ -20,15 +21,17 @@ function TeamsScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
 
   const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated;
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
+
+  const isAdmin = authCtx.isAuthenticated(tournamentName);
 
   useFocusEffect(
     useCallback(() => {
       async function fetchTeams() {
         try {
-          const teams = await getTeams(tournament_name);
+          const teams = await getTeams(tournamentName);
           const filteredTeams = teams.filter((team) => team !== null);
           if (filteredTeams.length > 0) {
             filteredTeams.sort((a, b) => (a.group > b.group ? 1 : -1));
@@ -99,20 +102,23 @@ function TeamsScreen({ navigation, route }) {
     );
   }
 
+  if (teamsList.length === 0) {
+    return (
+      <Background>
+        {isAdmin && addTeamHandler()}
+        <NoItemsDisplayer text={"NO TEAMS FOR NOW"} includeBackground={false} />
+      </Background>
+    );
+  }
+
   return (
     <Background>
       <FlatList
         data={teamsList}
         keyExtractor={(item) => item.id}
         renderItem={teamsHandler}
-        ListEmptyComponent={
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Text>No teams for now</Text>
-          </View>
-        }
         ListHeaderComponent={isAdmin ? addTeamHandler : null}
+        scrollIndicatorInsets={{ right: 1 }}
       />
     </Background>
   );

@@ -7,7 +7,6 @@ import {
   postData,
   updateData,
   deleteData,
-  getTournaments,
 } from "../util/https";
 import PlayerListModal from "./components/PlayerListModal";
 import { MatchEvents, goalsHandler } from "../components/MatchEvents";
@@ -17,24 +16,27 @@ import IconButtonsList from "./components/IconButtonsList";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import IoniconsButton from "../components/buttons/IoniconsButton";
 import TimeModifier from "./components/TimeModifier";
-
+import LiveDropdownMenu from "./components/LiveDropdownMenu";
+import dimensions from "../constants/dimensions";
+import colors from "../constants/colors";
 function LiveMatchScreen({ navigation, route }) {
   const gameData = route.params.gameData;
   const tournamentPhase = route.params.tournamentPhase;
   const { seconds, handleToggle, setManualSeconds } = Stopwatch();
-  const [inputSeconds, setInputSeconds] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalEvent, setModalEvent] = useState("");
-  const [matchLength, setMatchLength] = useState("");
   const [isModifyingTime, setIsModifyingTime] = useState(false);
   const [fetchEventsTrigger, setFetchEventsTrigger] = useState(true);
   const [eventsList, setEventsList] = useState([]);
   const [score, setScore] = useState([0, 0]);
   const [homeTeam, setHomeTeam] = useState(null);
   const [awayTeam, setAwayTeam] = useState(null);
+  const [matchMode, setmatchMode] = useState("Regular game");
 
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
+  const matchLength = tournamentInfo.matchLength;
 
   useEffect(() => {
     handleToggle();
@@ -42,10 +44,9 @@ function LiveMatchScreen({ navigation, route }) {
 
   // fetch all teams data - THIS IS EXECUTED ONLY FIRST TIME
   useEffect(() => {
-    console.log("GAME DATA", gameData);
     async function fetchTeamData() {
       try {
-        const teams = await getTeams(tournament_name);
+        const teams = await getTeams(tournamentName);
         const homeTeamData = teams.find(
           (team) => team.teamName === gameData["home"]
         );
@@ -68,25 +69,21 @@ function LiveMatchScreen({ navigation, route }) {
   }, [gameData]);
 
   useEffect(() => {
-    async function getMatchLength() {
-      try {
-        const data = await getTournaments(tournament_name);
-        setMatchLength(data.match_lenght);
-      } catch (error) {
-        console.error("Error fetching match length:", error);
-      }
-    }
-    getMatchLength();
-  }, [gameData]);
-
-  useEffect(() => {
     async function fetchEvents() {
       try {
         const fetchedEvents = await getMatchEvents(
-          tournament_name,
+          tournamentName,
           gameData["firebaseKey"]
         );
-        setEventsList(fetchedEvents["events"]);
+
+        // add mode to every dict
+        const updatedEventsList = fetchedEvents["events"].map((event) => ({
+          ...event,
+          matchMode: matchMode,
+        }));
+
+        console.log(updatedEventsList);
+        setEventsList(updatedEventsList);
         const { homeGoals, awayGoals } = goalsHandler(fetchedEvents["events"]);
         setScore([homeGoals, awayGoals]);
       } catch (error) {
@@ -102,7 +99,7 @@ function LiveMatchScreen({ navigation, route }) {
   useEffect(() => {
     const sendSeconds = async () => {
       await postData(
-        tournament_name,
+        tournamentName,
         { time: Math.floor(seconds / 60) + 1 },
         `events/${gameData["firebaseKey"]}/time`
       );
@@ -114,11 +111,10 @@ function LiveMatchScreen({ navigation, route }) {
     // handle half time and end
     if (seconds !== 0 && seconds === (matchLength / 2) * 60) {
       handleToggle();
-      console.log(seconds, (matchLength / 2) * 60);
       Alert.alert("Half time");
     } else if (seconds !== 0 && seconds >= matchLength * 60) {
       handleToggle();
-      handleFinishGame();
+      Alert.alert("Full time");
     }
   }, [seconds]);
 
@@ -138,13 +134,13 @@ function LiveMatchScreen({ navigation, route }) {
 
   async function finishGame(score) {
     await updateData(
-      tournament_name,
+      tournamentName,
       { score: score },
       `games/${tournamentPhase}`,
       gameData["firebaseKey"]
     );
 
-    deleteData(tournament_name, "live");
+    deleteData(tournamentName, "live");
 
     // handle statistics...this will be in separate file
     if (tournamentPhase == "Group Stage") {
@@ -187,13 +183,13 @@ function LiveMatchScreen({ navigation, route }) {
       const awayTeamStats = updateTeamStatistics(awayTeam, score, false);
 
       updateData(
-        tournament_name,
+        tournamentName,
         homeTeamStats,
         "teams",
         `/${homeTeam.firebaseKey}/statistics`
       );
       updateData(
-        tournament_name,
+        tournamentName,
         awayTeamStats,
         "teams",
         `/${awayTeam.firebaseKey}/statistics`
@@ -204,7 +200,6 @@ function LiveMatchScreen({ navigation, route }) {
   }
 
   const handleFinishGame = () => {
-    console.log("HOME", homeTeam);
     Alert.alert(
       "Finish Game",
       "Are you sure you want to finish game?",
@@ -225,8 +220,9 @@ function LiveMatchScreen({ navigation, route }) {
 
   return (
     <Background>
+      <LiveDropdownMenu setSelectedMode={setmatchMode} />
       <PlayerListModal
-        tournament_name={tournament_name}
+        tournamentName={tournamentName}
         visible={modalVisible}
         event={modalEvent}
         firebaseKey={gameData["firebaseKey"]}
@@ -243,6 +239,7 @@ function LiveMatchScreen({ navigation, route }) {
       <TimeModifier
         visible={isModifyingTime}
         seconds={seconds}
+        matchLength={matchLength}
         setManualSeconds={setManualSeconds}
         onClose={() => {
           setIsModifyingTime(false);
@@ -256,10 +253,13 @@ function LiveMatchScreen({ navigation, route }) {
         />
         <IoniconsButton
           icon={"settings-outline"}
-          color={"red"}
-          size={20}
+          color={colors.redNoticeColor}
+          size={dimensions.screenWidth * 0.05}
           onPress={() => setIsModifyingTime(true)}
-          buttonStyle={{ position: "absolute", right: 120 }}
+          buttonStyle={{
+            position: "absolute",
+            right: dimensions.screenWidth * 0.3,
+          }}
         />
       </View>
       <View style={styles.teamsContainer}>
@@ -278,31 +278,24 @@ function LiveMatchScreen({ navigation, route }) {
       <View style={styles.buttonContainer}>
         <IconButtonsList
           team="home"
+          mode={matchMode}
           seconds={seconds}
           handleIconPress={handleIconPress}
         />
         <IconButtonsList
           team="away"
+          mode={matchMode}
           seconds={seconds}
           handleIconPress={handleIconPress}
         />
       </View>
       <View style={styles.eventListContainer}>
         <MatchEvents
-          tournament_name={tournament_name}
+          tournamentName={tournamentName}
           eventsList={eventsList}
+          matchMode={matchMode}
           handleDeleteEvent={() => setFetchEventsTrigger((current) => !current)}
         />
-      </View>
-      <View>
-        {score[0] === score[1] && (
-          <PrimaryButton
-            onPress={() => {}}
-            buttonText="Penalties"
-            buttonStyle={styles.finishGameButton}
-            buttonTextStyle={styles.finishGameText}
-          />
-        )}
       </View>
       <View style={styles.finishButtonContainer}>
         <PrimaryButton
@@ -320,8 +313,8 @@ export default LiveMatchScreen;
 
 const styles = StyleSheet.create({
   timeContainer: {
-    paddingTop: 20,
-    paddingBottom: 30,
+    paddingTop: dimensions.screenWidth * 0.05,
+    paddingBottom: dimensions.screenWidth * 0.06,
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
@@ -332,8 +325,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   teamText: {
-    color: "white",
-    fontSize: 20,
+    color: colors.headerTextColor,
+    fontSize: dimensions.screenWidth * 0.05,
   },
   scoreContainer: {
     flexDirection: "row",
@@ -344,13 +337,13 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: dimensions.screenWidth * 0.02,
+    marginBottom: dimensions.screenWidth * 0.02,
   },
   time: {
-    fontSize: 24,
+    fontSize: dimensions.screenWidth * 0.06,
     fontWeight: "bold",
-    color: "white",
+    color: colors.headerTextColor,
   },
   eventListContainer: {
     flex: 1,
@@ -359,26 +352,16 @@ const styles = StyleSheet.create({
     borderTopColor: "lightgray",
   },
   finishButtonContainer: {
-    marginTop: 10,
+    marginTop: dimensions.screenWidth * 0.02,
     marginBottom: "10%",
   },
   finishGameButton: {
-    padding: 10,
+    padding: dimensions.screenWidth * 0.02,
     borderRadius: 5,
     alignItems: "center",
   },
   finishGameText: {
-    color: "red",
-    fontSize: 30,
-  },
-  input: {
-    height: 70, // Increased height
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: "red",
-    textAlign: "center",
-    padding: 10, // Added padding
-    fontSize: 20, // Ensure the font size is visible
-    color: "red",
+    color: colors.redNoticeColor,
+    fontSize: dimensions.screenWidth * 0.07,
   },
 });

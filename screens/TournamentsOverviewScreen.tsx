@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, Animated, Pressable } from "react-native";
 import type { PagerViewOnPageScrollEventData } from "react-native-pager-view";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useContext } from "react";
 import PagerView from "react-native-pager-view";
 import Background from "../components/Background";
 import colors from "../constants/colors";
@@ -8,7 +8,9 @@ import dimensions from "../constants/dimensions";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import { getTournaments } from "../util/https";
 import LoadinSpinner from "../components/LoadingSpinner";
-import NoItems from "../components/NoItemsDisplayer";
+import NoItemsDisplayer from "../components/NoItemsDisplayer";
+import { BasicContext } from "../store/basic-context";
+
 const DOT_SIZE = dimensions.screenWidth * 0.15;
 const TITLE_SIZE = dimensions.screenWidth * 0.075;
 const IMAGE_SIZE = dimensions.screenWidth * 0.6;
@@ -26,10 +28,10 @@ const Title = ({ data, scrollOffsetAnimatedValue, positionAnimatedValue }) => {
   return (
     <View style={styles.titleContainer}>
       <Animated.View style={{ transform: [{ translateY }] }}>
-        {data.map(({ name }, index) => {
+        {data.map(({ tournamentName }, index) => {
           return (
             <Text key={index} style={styles.titleText}>
-              {name}
+              {tournamentName}
             </Text>
           );
         })}
@@ -39,14 +41,13 @@ const Title = ({ data, scrollOffsetAnimatedValue, positionAnimatedValue }) => {
 };
 
 const Item = ({
-  name,
-  imageUri,
-  date,
+  item,
   scrollOffsetAnimatedValue,
   navigation,
   setLoadingImages,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const basicCtx = useContext(BasicContext);
 
   const inputRange = [0, 0.5, 0.99];
   const inputRangeOpacity = [0, 0.5, 0.99];
@@ -61,24 +62,21 @@ const Item = ({
   });
 
   const handleImagePress = () => {
-    navigation.navigate("TournamentScreen", {
-      tournamentName: name,
-      tournamentPicture: imageUri,
-    });
+    basicCtx.setTournamentData(item);
+    navigation.navigate("TournamentScreen");
   };
 
   const handleImageLoad = () => {
     setIsLoading(false);
     setLoadingImages(false);
   };
-
   return (
     <View style={styles.itemStyle}>
       <Pressable onPress={handleImagePress}>
         {({ pressed }) => (
           <>
             <Animated.Image
-              source={{ uri: imageUri }}
+              source={{ uri: item.imageUri }}
               style={[
                 styles.image,
                 {
@@ -93,7 +91,9 @@ const Item = ({
       </Pressable>
       {!isLoading && (
         <Animated.View style={[styles.dateContainer, { opacity }]}>
-          <Animated.Text style={styles.date}>{date}</Animated.Text>
+          <Animated.Text style={styles.date}>
+            {item.tournamentDate}
+          </Animated.Text>
         </Animated.View>
       )}
     </View>
@@ -172,7 +172,7 @@ export default function TournamentsOverviewScreen({ navigation, route }) {
   }
 
   if (data.length == 0) {
-    return <NoItems text={"NO TOURNAMENTS FOR NOW"} />;
+    return <NoItemsDisplayer text={"NO TOURNAMENTS FOR NOW"} />;
   }
 
   return (
@@ -206,7 +206,7 @@ export default function TournamentsOverviewScreen({ navigation, route }) {
         {data.map((item) => (
           <View collapsable={false} key={item.id}>
             <Item
-              {...item}
+              item={item}
               scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
               positionAnimatedValue={positionAnimatedValue}
               navigation={navigation}
@@ -306,12 +306,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    color: "white",
-    fontSize: 12,
-  },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
+    color: colors.headerTextColor,
+    fontSize: dimensions.screenWidth * 0.03,
   },
 });

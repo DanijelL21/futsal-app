@@ -2,7 +2,7 @@ from common import put_firebase_object, get_firebase_object, generate_next_id
 from datetime import datetime, timedelta
 
 
-tournament_name = "MNT SMRIKA"
+tournamentName = "MNT SMRIKA"
 start_time = "10.01.2024 18:00"
 daily_match_nr = 8
 match_length = 30
@@ -22,22 +22,11 @@ def generate_games_data(home: str, away: str, date: str, time: str, path: str):
 
     return data
 
-def generate_groups(teams):
-    groups = {}
-    for team in teams.values():
-        team_name = team["teamName"]
-        group = team["group"]
-        if group not in groups:
-            groups[group] = []
-        groups[group].append({"team_name": team_name, "points": team["statistics"]["p"], "id": team["id"]})
-    
-    return groups
-
 def create_group_stage_games(
     start_time: str, daily_match_nr: int, match_length: int, pause_lenght: int
 ):
-    path = f"{tournament_name}/games/Group Stage"
-    teams = get_firebase_object(f"{tournament_name}/teams")
+    path = f"{tournamentName}/games/Group Stage"
+    teams = get_firebase_object(f"{tournamentName}/teams")
     matches = {}
     for team in teams.values():
         team_name = team["teamName"]
@@ -72,8 +61,8 @@ def create_group_stage_games(
     return start_datetime ## NOT TESTED !!
 
 def create_round_16_games(start_time: str, match_length: int, pause_lenght: int):
-    teams = get_firebase_object(f"{tournament_name}/teams")
-    path = f"{tournament_name}/games/Round of 16"
+    teams = get_firebase_object(f"{tournamentName}/teams")
+    path = f"{tournamentName}/games/Round of 16"
     groups = {}
     for team in teams.values():
         team_name = team["teamName"]
@@ -112,8 +101,8 @@ def create_round_16_games(start_time: str, match_length: int, pause_lenght: int)
                 put_firebase_object(path, game)
 
 def create_quarter_finals_games(start_time: str, match_length: int, pause_lenght: int):
-    games = get_firebase_object(f"{tournament_name}/games/Round of 16")
-    path = f"{tournament_name}/games/Quarter-finals"
+    games = get_firebase_object(f"{tournamentName}/games/Round of 16")
+    path = f"{tournamentName}/games/Quarter-finals"
     
     winning_teams =[]
     for team in games.values():
@@ -131,8 +120,8 @@ def create_quarter_finals_games(start_time: str, match_length: int, pause_lenght
         put_firebase_object(path, game)
 
 def create_semi_finals_games(start_time: str, match_length: int, pause_lenght: int):
-    games = get_firebase_object(f"{tournament_name}/games/Quarter-finals")
-    path = f"{tournament_name}/games/Semi-finals"
+    games = get_firebase_object(f"{tournamentName}/games/Quarter-finals")
+    path = f"{tournamentName}/games/Semi-finals"
     
     winning_teams =[]
     for team in games.values():
@@ -150,8 +139,8 @@ def create_semi_finals_games(start_time: str, match_length: int, pause_lenght: i
         put_firebase_object(path, game)
 
 def create_finals_games(start_time: str, match_length: int, pause_lenght: int):
-    games = get_firebase_object(f"{tournament_name}/games/Semi-finals")
-    path = f"{tournament_name}/games/Final"
+    games = get_firebase_object(f"{tournamentName}/games/Semi-finals")
+    path = f"{tournamentName}/games/Final"
     
     winning_teams = []
     losing_teams = []
@@ -223,8 +212,8 @@ create_group_stage_games(start_time, daily_match_nr, match_length, pause_lenght)
 #         return
     
 #     next_round = next_stage.value
-#     games = get_firebase_object(f"{tournament_name}/games/{current_round}")
-#     path = f"{tournament_name}/games/{next_round}"
+#     games = get_firebase_object(f"{tournamentName}/games/{current_round}")
+#     path = f"{tournamentName}/games/{next_round}"
     
 #     winning_teams = []
 #     losing_teams = []
@@ -242,7 +231,7 @@ create_group_stage_games(start_time, daily_match_nr, match_length, pause_lenght)
 
 #     if next_stage == TournamentStage.FINAL:
 #         # Also create the 3rd place game
-#         path_third_place = f"{tournament_name}/games/{TournamentStage.THIRD_PLACE.value}"
+#         path_third_place = f"{tournamentName}/games/{TournamentStage.THIRD_PLACE.value}"
 #         create_games(losing_teams, start_datetime, match_length, pause_length, path_third_place)
 
 # # Example usage:

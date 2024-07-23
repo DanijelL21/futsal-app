@@ -8,7 +8,8 @@ import {
   RedCardButton,
   YellowCardButton,
 } from "../adminScreens/components/IconButtons";
-
+import dimensions from "../constants/dimensions";
+import colors from "../constants/colors";
 const formatPlayerName = (player) => {
   try {
     const [firstName, ...lastNameParts] = player.split(" ");
@@ -19,7 +20,14 @@ const formatPlayerName = (player) => {
   }
 };
 
-function MatchEvents({ tournament_name, eventsList, handleDeleteEvent }) {
+function MatchEvents({
+  tournamentName,
+  eventsList,
+  matchMode,
+  handleDeleteEvent,
+}) {
+  let separatorRendered = false;
+
   const renderItem = ({ item, index }) => {
     const isHomeTeamEvent = item.team === "home";
     const eventContainerStyle = isHomeTeamEvent
@@ -29,7 +37,7 @@ function MatchEvents({ tournament_name, eventsList, handleDeleteEvent }) {
     const deleteEventPress = async () => {
       if (handleDeleteEvent) {
         await deleteData(
-          tournament_name,
+          tournamentName,
           `events/${item.firebaseKey}`,
           item.eventKey
         );
@@ -160,15 +168,33 @@ function MatchEvents({ tournament_name, eventsList, handleDeleteEvent }) {
       );
     }
 
+    let showSeparator = false;
+    if (
+      matchMode === "Penalty kicks" &&
+      item.event.includes("penalty") &&
+      !separatorRendered
+    ) {
+      showSeparator = true;
+      separatorRendered = true; // Ensure the separator is only shown once
+    }
+
     return (
-      <View style={[styles.eventItem, eventContainerStyle]}>
-        {displayedText(item)}
-        {handleDeleteEvent && (
-          <Pressable onPress={deleteEventPress}>
-            <Text style={styles.removeEvent}>x</Text>
-          </Pressable>
+      <>
+        {showSeparator && (
+          <View style={styles.separatorContainer}>
+            <Text style={styles.separatorText}>Penalty Shootout</Text>
+            <View style={styles.separator} />
+          </View>
         )}
-      </View>
+        <View style={[styles.eventItem, eventContainerStyle]}>
+          {displayedText(item)}
+          {handleDeleteEvent && (
+            <Pressable onPress={deleteEventPress}>
+              <Text style={styles.removeEvent}>x</Text>
+            </Pressable>
+          )}
+        </View>
+      </>
     );
   };
 
@@ -177,6 +203,7 @@ function MatchEvents({ tournament_name, eventsList, handleDeleteEvent }) {
       data={eventsList}
       keyExtractor={(item) => item.eventKey}
       renderItem={renderItem}
+      scrollIndicatorInsets={{ right: 1 }}
     />
   );
 }
@@ -208,7 +235,9 @@ const styles = StyleSheet.create({
   eventItem: {
     paddingVertical: 5,
     flexDirection: "row",
-    alignItems: "center", // Added to vertically center items
+    alignItems: "center",
+    alignContent: "center",
+    justifyContent: "center",
   },
   homeTeamEventItem: {
     alignSelf: "flex-start",
@@ -217,8 +246,8 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   removeEvent: {
-    fontSize: 15,
-    color: "red",
+    fontSize: dimensions.screenWidth * 0.05,
+    color: colors.redNoticeColor,
     marginLeft: 10,
   },
   displayedTextContainer: {
@@ -228,19 +257,37 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   displayedText: {
-    size: 15,
-    color: "white",
+    fontSize: dimensions.screenWidth * 0.05,
+    color: colors.headerTextColor,
+    marginRight: 10,
   },
   scoreContainer: {
     flexDirection: "row",
     alignContent: "center",
     alignItems: "center",
-    borderWidth: 1, // Set the border width
-    borderColor: "white", // Set the border color (black in this case)
+    borderWidth: 1,
+    borderColor: colors.headerTextColor,
     borderRadius: 5,
     marginLeft: 5,
     marginRight: 5,
     paddingRight: 5,
+  },
+  separatorContainer: {
+    marginTop: 15,
+    marginVertical: 10,
+    alignItems: "center",
+  },
+  separatorText: {
+    color: "lightgray",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  separator: {
+    height: 1,
+    borderTopColor: "lightgray",
+    width: "100%",
+    marginTop: 10,
+    borderTopWidth: 2,
   },
 });
 

@@ -1,50 +1,34 @@
-import { Text, View, StyleSheet, Button } from "react-native";
-import { useEffect, useState, useLayoutEffect, useContext } from "react";
-import { getMatchEvents, getGame } from "../../util/https";
+import { Text, View, StyleSheet } from "react-native";
+import { useEffect, useState, useContext } from "react";
+import { getMatchEvents, getGame, getData } from "../../util/https";
 import { MatchEvents, goalsHandler } from "../../components/MatchEvents";
 import { BasicContext } from "../../store/basic-context";
-import { AuthContext } from "../../store/auth-context";
 import Background from "../../components/Background";
-import PrimaryButton from "../../components/buttons/PrimaryButton";
-
+import colors from "../../constants/colors";
 function MatchScreen({ navigation, route }) {
   const firebaseKey = route.params.firebaseKey;
+  const tournamentPhase = route.params.tournamentPhase;
+  const isLive = route.params.isLive ?? true;
   const [eventsList, setEventsList] = useState([]);
   const [time, setTime] = useState(0);
   const [score, setScore] = useState([0, 0]);
   const [gameData, setgameData] = useState({});
-  const [homeTeam, setHomeTeam] = useState(null);
-  const [awayTeam, setAwayTeam] = useState(null);
 
-  const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated;
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
-
-  // FIX THIS !!
-  useLayoutEffect(() => {
-    console.log("GAME DATA", gameData);
-    navigation.setOptions({
-      headerLeft: () => (
-        <PrimaryButton
-          onPress={() => navigation.goBack()}
-          buttonText="<"
-          buttonTextStyle={{
-            fontSize: 30,
-            color: "white",
-            marginLeft: 10,
-            fontWeight: "bold",
-          }}
-        />
-      ),
-    });
-  }, [navigation]);
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
   // get game data
   useEffect(() => {
     async function getGameData() {
       try {
-        const game = await getGame(tournament_name, "Group Stage", firebaseKey);
+        console.log("FIREBASE KEY", firebaseKey);
+        const game = await getGame(
+          tournamentName,
+          tournamentPhase,
+          firebaseKey
+        );
+        console.log("GAME DATA", game);
         setgameData(game);
       } catch (error) {
         console.error("Error fetching team data:", error);
@@ -56,14 +40,17 @@ function MatchScreen({ navigation, route }) {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const fetchedEvents = await getMatchEvents(
-          tournament_name,
-          firebaseKey
-        );
+        const fetchedEvents = await getMatchEvents(tournamentName, firebaseKey);
+        console.log("fetchedEvents", fetchedEvents);
         setEventsList(fetchedEvents["events"]);
-        setTime(fetchedEvents["time"]);
         const { homeGoals, awayGoals } = goalsHandler(fetchedEvents["events"]);
         setScore([homeGoals, awayGoals]);
+        console.log("ISLIVE", isLive);
+        if (isLive === false) {
+          setTime(tournamentInfo.matchLength);
+        } else {
+          setTime(fetchedEvents["time"]);
+        }
       } catch (error) {
         console.error("Error fetching events:", error);
       }
@@ -83,19 +70,16 @@ function MatchScreen({ navigation, route }) {
           {gameData?.home}
         </Text>
         <View style={styles.scoreContainer}>
-          <Text style={styles.teamText}>{score[0]}</Text>
-          <Text style={[styles.teamText, { marginHorizontal: 10 }]}>:</Text>
-          <Text style={styles.teamText}>{score[1]}</Text>
+          <Text style={styles.scoreText}>{score[0]}</Text>
+          <Text style={[styles.scoreText, { marginHorizontal: 10 }]}>:</Text>
+          <Text style={styles.scoreText}>{score[1]}</Text>
         </View>
         <Text style={[styles.teamText, { textAlign: "right", flex: 1 }]}>
           {gameData?.away}
         </Text>
       </View>
       <View style={styles.eventListContainer}>
-        <MatchEvents
-          tournament_name={tournament_name}
-          eventsList={eventsList}
-        />
+        <MatchEvents tournamentName={tournamentName} eventsList={eventsList} />
       </View>
     </Background>
   );
@@ -116,8 +100,9 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   teamText: {
-    color: "white",
+    color: colors.headerTextColor,
     fontSize: 20,
+    margin: 10,
   },
   scoreContainer: {
     flexDirection: "row",
@@ -125,10 +110,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
+  scoreText: {
+    color: colors.headerTextColor,
+    fontSize: 20,
+  },
   time: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "white",
+    color: colors.headerTextColor,
   },
   eventListContainer: {
     flex: 1,

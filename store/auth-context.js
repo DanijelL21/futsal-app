@@ -25,9 +25,7 @@ function AuthContextProvider({ children }) {
   function authenticate(token) {
     // trigger this when user login succesfully
     setAuthToken(token);
-    // console.log("TOKEN", token);
     AsyncStorage.setItem("token", JSON.stringify(token));
-    console.log("SUCCESFULLY SET ITEM", token);
   }
 
   function logout() {
@@ -36,17 +34,13 @@ function AuthContextProvider({ children }) {
     AsyncStorage.removeItem("token");
   }
 
-  function isAuthenticated(tournament_name) {
-    console.log("AUTH TOKEN IN", authToken);
-    console.log("TN", tournament_name);
-
+  function isAuthenticated(tournamentName) {
     if (
       authToken &&
       Object.keys(authToken).length > 0 &&
       authToken.token !== "" &&
-      authToken.tournament_name === tournament_name
+      authToken.tournamentName === tournamentName
     ) {
-      console.log(authToken.tournament_name);
       return true;
     } else {
       return false;

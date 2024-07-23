@@ -1,5 +1,7 @@
 from common import get_firebase_object
 
+tournamentName = "MNT SMRIKA"
+problematic_stage = "Group Stage"
 
 def fix_games(path):
     obj = get_firebase_object(path)
@@ -17,8 +19,6 @@ def fix_games(path):
     return duplicate_keys
 
 
-tournament_name = "MNT SMRIKA"
-problematic_stage = "Group Stage"
-path = f"{tournament_name}/games/{problematic_stage}"
+path = f"{tournamentName}/games/{problematic_stage}"
 
 print(fix_games(path))

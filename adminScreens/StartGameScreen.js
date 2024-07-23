@@ -9,7 +9,7 @@ import { BasicContext } from "../store/basic-context";
 import GrupsDropdownMenu from "../components/GrupsDropdownMenu";
 import { useFocusEffect } from "@react-navigation/native";
 import LoadinSpinner from "../components/LoadingSpinner";
-import NoItems from "../components/NoItemsDisplayer";
+import NoItemsDisplayer from "../components/NoItemsDisplayer";
 const GAMES_PADDING = dimensions.screenWidth * 0.0375;
 const GAMES_FONT_SIZE = dimensions.screenWidth * 0.0375;
 
@@ -19,13 +19,14 @@ function StartGameScreen({ navigation, route }) {
   const [loading, setLoading] = useState(true);
 
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
   useFocusEffect(
     useCallback(() => {
       async function fetchGames() {
         try {
-          const games = await getGames(tournament_name, tournamentPhase);
+          const games = await getGames(tournamentName, tournamentPhase);
           const filteredGames = games.filter(
             (game) => game !== null && !game.hasOwnProperty("score")
           );
@@ -50,10 +51,10 @@ function StartGameScreen({ navigation, route }) {
 
   function startGame(game) {
     postData(
-      tournament_name,
+      tournamentName,
       {
         ...game,
-        [tournamentPhase]: tournamentPhase,
+        tournamentPhase: tournamentPhase,
       },
       "live"
     );
@@ -87,24 +88,30 @@ function StartGameScreen({ navigation, route }) {
           }
           buttonStyle={styles.gamesButton}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.games}>{itemData.item.home}</Text>
-            <Text style={styles.games}>VS</Text>
-            <Text style={styles.games}>{itemData.item.away}</Text>
+          <View style={styles.gameInfoRow}>
+            <View
+              style={{
+                flex: 1,
+                alignItems: "flex-start",
+              }}
+            >
+              <Text style={styles.games}>{itemData.item.home}</Text>
+            </View>
+            <View style={styles.scoreContainer}>
+              <Text style={styles.games}>VS</Text>
+            </View>
+            <View
+              style={{
+                flex: 1,
+                alignItems: "flex-end",
+              }}
+            >
+              <Text style={styles.games}>{itemData.item.away}</Text>
+            </View>
           </View>
-          <View
-            style={{
-              alignItems: "center",
-              marginTop: 15,
-            }}
-          >
+          <View style={styles.dateTimeContainer}>
             <Text style={styles.games}>{itemData.item.date}</Text>
-            <Text style={styles.games}>{itemData.item.time} </Text>
+            <Text style={styles.games}>{itemData.item.time}</Text>
           </View>
         </SecondaryButton>
       </View>
@@ -114,20 +121,18 @@ function StartGameScreen({ navigation, route }) {
   return (
     <Background>
       <GrupsDropdownMenu setSelectedPhase={setTournamentPhase} />
-      <FlatList
-        data={gameList}
-        keyExtractor={(item) => item.id}
-        renderItem={renderGames}
-        ListEmptyComponent={() => (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
-              No games for now
-            </Text>
-          </View>
-        )}
-      />
+      {gameList.length === 0 ? (
+        <>
+          <NoItemsDisplayer text="NO GAMES FOR NOW" includeBackground={false} />
+        </>
+      ) : (
+        <FlatList
+          data={gameList}
+          keyExtractor={(item) => item.id}
+          renderItem={renderGames}
+          scrollIndicatorInsets={{ right: 1 }}
+        />
+      )}
     </Background>
   );
 }
@@ -150,5 +155,20 @@ const styles = StyleSheet.create({
     color: colors.headerTextColor,
     fontSize: GAMES_FONT_SIZE,
     fontWeight: "bold",
+  },
+  gameInfoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  scoreContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dateTimeContainer: {
+    alignItems: "center",
+    marginTop: 15,
   },
 });

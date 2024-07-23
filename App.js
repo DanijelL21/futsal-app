@@ -3,11 +3,11 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "./constants/colors";
-import DevScreen from "./screens/DevScreen.js";
 import MainScreen from "./screens/NewsScreen.js";
 import MatchScreen from "./screens/TournamentScreen/MatchScreen.js";
 import TournamentsOverviewScreen from "./screens/TournamentsOverviewScreen.tsx";
 import MainTournamentScreen from "./screens/TournamentScreen/MainTournamentScreen.js";
+import StatisticsScreen from "./screens/TournamentScreen/StatisticsScreen";
 import TableScreen from "./screens/TournamentScreen/TableScreen";
 import TeamsScreen from "./screens/TournamentScreen/TeamsScreen.js";
 import LeaguesScreen from "./screens/LeaguesScreen.js";
@@ -75,31 +75,6 @@ function MainStack() {
           headerShown: false,
         }}
       />
-      <BottomTab.Screen
-        name="DevScreen"
-        component={DevScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="football-outline" size={size} color={color} />
-          ),
-        }}
-      />
-    </BottomTab.Navigator>
-  );
-}
-
-function GameStack() {
-  return (
-    <BottomTab.Navigator screenOptions={stackNavigatorOptions}>
-      <BottomTab.Screen
-        name="MatchScreen"
-        component={MatchScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="newspaper-outline" size={size} color={color} />
-          ),
-        }}
-      />
     </BottomTab.Navigator>
   );
 }
@@ -123,6 +98,7 @@ export default function App() {
             <Stack.Screen name="Teams" component={TeamsScreen} />
             <Stack.Screen name="Tables" component={TableScreen} />
             <Stack.Screen name="TeamDetails" component={TeamDetailsScreen} />
+            <Stack.Screen name="Statistics" component={StatisticsScreen} />
             <Stack.Screen
               name="HandleTeams"
               component={TeamsHandler}
@@ -145,9 +121,9 @@ export default function App() {
               }}
             />
             <Stack.Screen
-              name="GameStack"
-              component={GameStack}
-              options={{ headerShown: false }}
+              name="MatchScreen"
+              component={MatchScreen}
+              options={{ title: "Match" }}
             />
             <Stack.Screen
               name="StartGame"

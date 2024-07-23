@@ -1,7 +1,8 @@
 import { StyleSheet, View, Text } from "react-native";
 import IoniconsButton from "../../components/buttons/IoniconsButton";
-
-const ICON_SIZE = 20;
+import dimensions from "../../constants/dimensions";
+import colors from "../../constants/colors";
+const ICON_SIZE = dimensions.screenWidth * 0.05;
 
 export const GoalButton = ({ team, seconds, handleIconPress }) => (
   <IoniconsButton
@@ -136,7 +137,7 @@ export const PenaltyMissedButton = ({ team, seconds, handleIconPress }) => {
 
 const styles = StyleSheet.create({
   button: {
-    padding: 10,
+    padding: dimensions.screenWidth * 0.02,
   },
   penaltyContainer: {
     justifyContent: "center",

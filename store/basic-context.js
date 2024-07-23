@@ -1,29 +1,27 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"; // https://react-native-async-storage.github.io/async-storage/docs/install/
-
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 
 export const BasicContext = createContext({
-  name: "",
-  setTournamentName: () => {},
-  getTournamentName: () => {},
-  startLiveMatch: () => {},
+  tournamentData: {},
+  setTournamentData: () => {},
+  getTournamentData: () => {},
 });
 
 function BasicContextProvider({ children }) {
-  const [name, setName] = useState();
+  const [tournamentInfo, setTournamentInfo] = useState({});
 
-  function setTournamentName(name) {
-    setName(name);
+  function setTournamentData(data) {
+    console.log("SETTING DATA", data);
+    setTournamentInfo(data);
   }
 
-  function getTournamentName() {
-    return name;
+  function getTournamentData() {
+    return tournamentInfo;
   }
 
   const value = {
-    name: name,
-    setTournamentName: setTournamentName,
-    getTournamentName: getTournamentName,
+    tournamentData: tournamentInfo,
+    setTournamentData: setTournamentData,
+    getTournamentData: getTournamentData,
   };
 
   return (

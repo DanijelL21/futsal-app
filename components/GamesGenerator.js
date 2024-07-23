@@ -1,172 +1,177 @@
 import { postData, getTeams, getGames } from "../util/https";
 import { Alert } from "react-native";
 
-async function generateGames({
-  tournament_name,
-  tournamentPhase,
-  setGameList,
-}) {
-  async function groupTeamsByGroup(tournament_name) {
-    const teams = await getTeams(tournament_name);
-    return teams.reduce((acc, team) => {
-      if (!acc[team.group]) {
-        acc[team.group] = [];
+const PHASES = {
+  GROUP_STAGE: "Group Stage",
+  ROUND_OF_16: "Round of 16",
+  QUARTER_FINALS: "Quarter-finals",
+  SEMI_FINALS: "Semi-finals",
+  FINAL: "Final",
+};
+
+const PREVIOUS_PHASES = {
+  [PHASES.GROUP_STAGE]: null,
+  [PHASES.ROUND_OF_16]: PHASES.GROUP_STAGE,
+  [PHASES.QUARTER_FINALS]: PHASES.ROUND_OF_16,
+  [PHASES.SEMI_FINALS]: PHASES.QUARTER_FINALS,
+  [PHASES.FINAL]: PHASES.SEMI_FINALS,
+};
+
+const MATCHUPS = [
+  ["A", "B"],
+  ["C", "D"],
+  ["E", "F"],
+  ["G", "H"],
+  ["B", "A"],
+  ["D", "C"],
+  ["F", "E"],
+  ["H", "G"],
+];
+
+async function groupTeamsByGroup(tournamentName) {
+  const teams = await getTeams(tournamentName);
+  return teams.reduce((acc, team) => {
+    if (!acc[team.group]) acc[team.group] = [];
+    acc[team.group].push({
+      team: team.teamName,
+      id: team.id,
+      points: team.statistics.p,
+    });
+    return acc;
+  }, {});
+}
+
+async function generateGroupStageGames(tournamentName) {
+  const groups = await groupTeamsByGroup(tournamentName);
+  const games = [];
+
+  Object.values(groups).forEach((groupTeams) => {
+    for (let i = 0; i < groupTeams.length; i++) {
+      for (let j = i + 1; j < groupTeams.length; j++) {
+        games.push({
+          home: groupTeams[i].team,
+          away: groupTeams[j].team,
+          date: "TBD",
+          time: "TBD",
+          id: `${groupTeams[i].id}${groupTeams[j].id}`,
+        });
       }
-      acc[team.group].push({
-        team: team.teamName,
-        id: team.id,
-        points: team.statistics.p,
-      });
-      return acc;
-    }, {});
+    }
+  });
+
+  return games;
+}
+
+async function generateRoundOf16Games(tournamentName) {
+  const groups = await groupTeamsByGroup(tournamentName);
+
+  if (
+    !Object.values(groups).every(
+      (group) => group.filter((team) => team.points > 0).length >= 2
+    )
+  ) {
+    Alert.alert(
+      "Games not completed",
+      "Please finish all games from previous round before generating new games"
+    );
+    return [];
   }
 
-  async function generateGroupStageGames(tournament_name) {
-    const groups = await groupTeamsByGroup(tournament_name);
-    const games = [];
+  const sortedGroups = Object.fromEntries(
+    Object.entries(groups).map(([group, teams]) => [
+      group,
+      teams.sort((a, b) => b.points - a.points),
+    ])
+  );
 
-    Object.keys(groups).forEach((group) => {
-      const groupTeams = groups[group];
-      for (let i = 0; i < groupTeams.length; i++) {
-        for (let j = i + 1; j < groupTeams.length; j++) {
-          games.push({
-            home: groupTeams[i]["team"],
-            away: groupTeams[j]["team"],
-            date: "TBD",
-            time: "TBD",
-            id: `${groupTeams[i]["id"]}${groupTeams[j]["id"]}`,
-          });
+  return MATCHUPS.map(([group1, group2]) => {
+    const team1 = sortedGroups[group1]?.[0];
+    const team2 = sortedGroups[group2]?.[1];
+    return team1 && team2
+      ? {
+          home: team1.team,
+          away: team2.team,
+          date: "TBD",
+          time: "TBD",
+          id: `${team1.id}${team2.id}`,
         }
-      }
-    });
+      : null;
+  }).filter(Boolean);
+}
 
-    return games;
-  }
+async function generateOtherMatches(tournamentName, phase) {
+  const previousGames = await getGames(tournamentName, PREVIOUS_PHASES[phase]);
 
-  async function generateRoundOf16Games(tournament_name) {
-    const groups = await groupTeamsByGroup(tournament_name);
-    const sortedGroups = {};
-
-    Object.keys(groups).forEach((group) => {
-      sortedGroups[group] = groups[group].sort((a, b) => b.points - a.points);
-    });
-
-    const matchups = [
-      ["A", "B"],
-      ["C", "D"],
-      ["E", "F"],
-      ["G", "H"],
-      ["B", "A"],
-      ["D", "C"],
-      ["F", "E"],
-      ["H", "G"],
-    ];
-
-    const games = [];
-    matchups.forEach(([group1, group2]) => {
-      const team1 = sortedGroups[group1][0];
-      const team2 = sortedGroups[group2][1];
-      if (team1 && team2) {
-        games.push({
-          home: team1["team"],
-          away: team2["team"],
-          date: "TBD",
-          time: "TBD",
-          id: `${team1["id"]}${team2["id"]}`,
-        });
-      }
-    });
-    return games;
-  }
-
-  const previous_phases = {
-    "Group Stage": null, // No previous stage
-    "Round of 16": "Group Stage",
-    "Quarter-finals": "Round of 16",
-    "Semi-finals": "Quarter-finals",
-    Final: "Semi-finals",
-  };
-
-  async function validatePreviousPhase(previous_games) {
-    const checkScore = previous_games.find(
-      (item) => !item.hasOwnProperty("score")
+  if (!previousGames.length || previousGames.some((game) => !game.score)) {
+    Alert.alert(
+      "Games not completed",
+      "Please finish all games from previous round before generating new games"
     );
-    if (checkScore || previous_games.length == 0) {
-      Alert.alert(
-        "Games not completed",
-        "Please finish all games from previous round before generating new games"
-      );
-      return false;
-    } else {
-      return true;
-    }
+    return [];
   }
-
-  async function generateMatches(tournament_name, phase) {
-    const previous_games = await getGames(
-      tournament_name,
-      previous_phases[phase]
-    );
-
-    const isValid = await validatePreviousPhase(previous_games);
-    if (!isValid) {
-      return [];
-    }
-    console.log("PG", previous_games);
-    const winners = [];
-    const losers = [];
-
-    previous_games.forEach((game) => {
-      if (game.score[0] > game.score[1]) {
-        winners.push(game.home);
-        losers.push(game.away);
+  const [winners, losers] = previousGames.reduce(
+    ([win, lose], game) => {
+      const [homeScore, awayScore] = game.score;
+      if (homeScore > awayScore) {
+        win.push(game.home);
+        lose.push(game.away);
       } else {
-        winners.push(game.away);
-        losers.push(game.home);
+        win.push(game.away);
+        lose.push(game.home);
       }
-    });
+      return [win, lose];
+    },
+    [[], []]
+  );
 
-    const games = [];
-
-    for (let i = 0; i < winners.length; i += 2) {
-      if (i + 1 < winners.length) {
-        games.push({
-          home: winners[i],
-          away: winners[i + 1],
-          date: "TBD",
-          time: "TBD",
-          id: i,
-        });
-      }
-    }
-
-    if (phase === "Final") {
-      games.push({
-        home: losers[0],
-        away: losers[1],
+  const games = winners.reduce((acc, team, index, arr) => {
+    if (index % 2 === 0 && arr[index + 1]) {
+      acc.push({
+        home: team,
+        away: arr[index + 1],
         date: "TBD",
         time: "TBD",
-        id: 1,
+        id: index / 2,
       });
     }
-    return games;
+    return acc;
+  }, []);
+
+  if (phase === PHASES.FINAL && losers.length >= 2) {
+    games.push({
+      home: losers[0],
+      away: losers[1],
+      date: "TBD",
+      time: "TBD",
+      id: games.length,
+    });
   }
 
+  return games;
+}
+
+async function generateGames({ tournamentName, tournamentPhase, setGameList }) {
   let games = [];
+  try {
+    if (tournamentPhase === PHASES.GROUP_STAGE) {
+      games = await generateGroupStageGames(tournamentName);
+    } else if (tournamentPhase === PHASES.ROUND_OF_16) {
+      games = await generateRoundOf16Games(tournamentName);
+    } else {
+      games = await generateOtherMatches(tournamentName, tournamentPhase);
+    }
 
-  if (tournamentPhase === "Group Stage") {
-    games = await generateGroupStageGames(tournament_name);
-  } else if (tournamentPhase === "Round of 16") {
-    games = await generateRoundOf16Games(tournament_name);
-  } else {
-    games = await generateMatches(tournament_name, tournamentPhase);
+    for (const game of games) {
+      await postData(tournamentName, game, `games/${tournamentPhase}`);
+    }
+    setGameList(games);
+  } catch (error) {
+    console.error("Error generating games:", error);
+    Alert.alert(
+      "Error",
+      "There was an error generating the games. Please try again."
+    );
   }
-
-  console.log(games);
-  for (const game of games) {
-    await postData(tournament_name, game, `games/${tournamentPhase}`);
-  }
-  setGameList(games);
 }
 
 export default generateGames;

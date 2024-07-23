@@ -1,5 +1,5 @@
 import { Text, View, FlatList, StyleSheet } from "react-native";
-import { getGames, getTeams, postData } from "../../util/https";
+import { getGames } from "../../util/https";
 import { useState, useCallback, useContext } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import colors from "../../constants/colors";
@@ -11,7 +11,9 @@ import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import generateGames from "../../components/GamesGenerator";
-import LoadinSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import NoItemsDisplayer from "../../components/NoItemsDisplayer";
+
 const GAMES_PADDING = dimensions.screenWidth * 0.0375;
 const GAMES_FONT_SIZE = dimensions.screenWidth * 0.0375;
 const ADD_TEAM_PADDING = dimensions.screenWidth * 0.1;
@@ -21,21 +23,24 @@ function GamesScreen({ navigation, route }) {
   const [gameList, setGameList] = useState([]);
   const [tournamentPhase, setTournamentPhase] = useState("Group Stage");
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated();
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
+
+  const isAdmin = authCtx.isAuthenticated(tournamentName);
 
   useFocusEffect(
     useCallback(() => {
       async function fetchGames() {
         try {
-          const games = await getGames(tournament_name, tournamentPhase);
+          const games = await getGames(tournamentName, tournamentPhase);
           const filteredGames = games.filter((game) => game !== null);
           setGameList(filteredGames);
         } catch (error) {
-          console.error("Error fetching teams:", error);
+          console.error("Error fetching games:", error);
         } finally {
           setLoading(false);
         }
@@ -44,10 +49,10 @@ function GamesScreen({ navigation, route }) {
     }, [tournamentPhase, navigation])
   );
 
-  if (loading) {
+  if (loading || generating) {
     return (
       <Background>
-        <LoadinSpinner />
+        <LoadingSpinner />
       </Background>
     );
   }
@@ -59,39 +64,46 @@ function GamesScreen({ navigation, route }) {
       modifyGame(item);
     }
   }
-  function renderGames(itemData) {
+
+  function renderGames({ item }) {
     return (
       <View style={styles.gamesContainer}>
         <SecondaryButton
-          onPress={() => handleGameButtonPress(itemData.item)}
+          onPress={() => handleGameButtonPress(item)}
           buttonStyle={styles.gamesButton}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.games}>{itemData.item.home}</Text>
-            {itemData.item.hasOwnProperty("score") ? (
-              <View style={styles.scoreContainer}>
-                <Text style={styles.games}>{itemData.item.score[0]}</Text>
-                <Text style={[styles.games, { marginHorizontal: 10 }]}>:</Text>
-                <Text style={styles.games}>{itemData.item.score[1]}</Text>
-              </View>
-            ) : (
-              <Text style={styles.games}>VS</Text>
-            )}
-            <Text style={styles.games}>{itemData.item.away}</Text>
+          <View style={styles.gameInfoRow}>
+            <View
+              style={{
+                flex: 1,
+                alignItems: "flex-start",
+              }}
+            >
+              <Text style={styles.games}>{item.home}</Text>
+            </View>
+            <View style={styles.scoreContainer}>
+              {item.hasOwnProperty("score") ? (
+                <>
+                  <Text style={styles.games}>{item.score[0]}</Text>
+                  <Text style={styles.gamesSeparator}>:</Text>
+                  <Text style={styles.games}>{item.score[1]}</Text>
+                </>
+              ) : (
+                <Text style={styles.games}>VS</Text>
+              )}
+            </View>
+            <View
+              style={{
+                flex: 1,
+                alignItems: "flex-end",
+              }}
+            >
+              <Text style={styles.games}>{item.away}</Text>
+            </View>
           </View>
-          <View
-            style={{
-              alignItems: "center",
-              marginTop: 15,
-            }}
-          >
-            <Text style={styles.games}>{itemData.item.date}</Text>
-            <Text style={styles.games}>{itemData.item.time} </Text>
+          <View style={styles.dateTimeContainer}>
+            <Text style={styles.games}>{item.date}</Text>
+            <Text style={styles.games}>{item.time}</Text>
           </View>
         </SecondaryButton>
       </View>
@@ -103,9 +115,9 @@ function GamesScreen({ navigation, route }) {
       <View style={styles.addGameContainer}>
         <PrimaryButton
           onPress={addGames}
-          buttonText={"Add Game"}
+          buttonText="Add Game"
           buttonStyle={styles.addGameButton}
-          buttonTextStyle={styles.addGame}
+          buttonTextStyle={styles.addGameText}
         />
       </View>
     );
@@ -113,51 +125,60 @@ function GamesScreen({ navigation, route }) {
 
   function addGames() {
     navigation.navigate("HandleGames", {
-      torunamentPhase: tournamentPhase,
+      tournamentPhase: tournamentPhase,
     });
   }
 
   function modifyGame(data) {
     navigation.navigate("HandleGames", {
-      torunamentPhase: tournamentPhase,
+      tournamentPhase: tournamentPhase,
       modifyGameData: data,
     });
   }
 
   function handleGameDetails(data) {
     console.log("DATA", data);
-    navigation.navigate("GameStack", {
-      screen: "MatchScreen",
-      params: { firebaseKey: data.firebaseKey },
+    navigation.navigate("MatchScreen", {
+      firebaseKey: data.firebaseKey,
+      tournamentPhase: tournamentPhase,
+      isLive: false,
     });
+  }
+
+  async function handleGenerateGames() {
+    setGenerating(true);
+    try {
+      await generateGames({ tournamentName, tournamentPhase, setGameList });
+    } catch (error) {
+      console.error("Error generating games:", error);
+    } finally {
+      setGenerating(false);
+    }
   }
 
   return (
     <Background>
       <GrupsDropdownMenu setSelectedPhase={setTournamentPhase} />
-      <FlatList
-        data={gameList}
-        keyExtractor={(item) => item.id}
-        renderItem={renderGames}
-        ListEmptyComponent={() => (
-          <View
-            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-          >
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
-              No games for now
-            </Text>
-          </View>
-        )}
-        ListHeaderComponent={isAdmin ? addGameHandler : null}
-      />
+      {gameList.length === 0 ? (
+        <>
+          {isAdmin && addGameHandler()}
+          <NoItemsDisplayer text="NO GAMES FOR NOW" includeBackground={false} />
+        </>
+      ) : (
+        <FlatList
+          data={gameList}
+          keyExtractor={(item) => item.id}
+          renderItem={renderGames}
+          ListHeaderComponent={isAdmin ? addGameHandler : null}
+          scrollIndicatorInsets={{ right: 1 }}
+        />
+      )}
       {isAdmin && gameList.length == 0 && (
         <PrimaryButton
-          onPress={() =>
-            generateGames({ tournament_name, tournamentPhase, setGameList })
-          }
-          buttonText={"Generate Games"}
-          buttonStyle={{ paddingVertical: 60, alignItems: "center" }}
-          buttonTextStyle={{ color: "white" }}
+          onPress={handleGenerateGames}
+          buttonText="Generate Games"
+          buttonStyle={styles.generateGamesButton}
+          buttonTextStyle={styles.generateGamesText}
         />
       )}
     </Background>
@@ -195,15 +216,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: ADD_TEAM_PADDING,
     paddingVertical: ADD_TEAM_PADDING / 4,
   },
-  addGame: {
+  addGameText: {
     color: colors.redNoticeColor,
     fontSize: ADD_TEAM_FONT_SIZE,
     fontWeight: "bold",
   },
-  scoreContainer: {
+  gameInfoRow: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  scoreContainer: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gamesSeparator: {
+    marginHorizontal: 10,
+    color: colors.headerTextColor,
+  },
+  dateTimeContainer: {
+    alignItems: "center",
+    marginTop: 15,
+  },
+  generateGamesButton: {
+    paddingVertical: 60,
+    alignItems: "center",
+  },
+  generateGamesText: {
+    color: colors.headerTextColor,
+    fontSize: dimensions.screenWidth * 0.05,
   },
 });

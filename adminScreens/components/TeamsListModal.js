@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { postData } from "../../util/https";
 import {
   Modal,
   Text,
@@ -9,90 +8,42 @@ import {
   SafeAreaView,
 } from "react-native";
 import Background from "../../components/Background";
+import { getTeams } from "../../util/https";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import dimensions from "../../constants/dimensions";
 import colors from "../../constants/colors";
-const PlayerListModal = ({
+
+const TeamsListModal = ({
   tournamentName,
   visible,
-  event,
-  firebaseKey,
-  players,
+  setTeam,
+  teamType,
   onClose,
 }) => {
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [selectingAssist, setSelectingAssist] = useState(false);
+  const [teamsList, setTeamsList] = useState(null);
 
   useEffect(() => {
-    if (!visible) {
-      // Reset state when modal is closed
-      setSelectedPlayer(null);
-      setSelectingAssist(false);
+    async function fetchTeamData() {
+      try {
+        const teams = await getTeams(tournamentName);
+        setTeamsList(teams);
+      } catch (error) {
+        console.error("Error fetching team data:", error);
+      }
     }
-  }, [visible]);
+    fetchTeamData();
+  }, []);
 
-  async function postEvent(tournamentName, data, key) {
-    const id = `events/${key}`;
-    await postData(tournamentName, data, id);
-  }
-
-  const handlePlayerSelect = async (player) => {
-    if (event.event === "goal") {
-      setSelectedPlayer(player);
-      setSelectingAssist(true);
-    } else {
-      await postEvent(
-        tournamentName,
-        {
-          ...event,
-          player: player.name,
-        },
-        firebaseKey
-      );
-      onClose();
-    }
-  };
-
-  const handleAssistSelect = async (assistPlayer) => {
-    await postEvent(
-      tournamentName,
-      {
-        ...event,
-        player: selectedPlayer.name,
-        assist: assistPlayer.name,
-      },
-      firebaseKey
-    );
+  const handleTeamSelect = (team) => {
+    setTeam(teamType, team.teamName);
     onClose();
   };
 
-  const handleNoneSelect = async () => {
-    await postEvent(
-      tournamentName,
-      {
-        ...event,
-        player: selectedPlayer.name,
-        assist: "NONE",
-      },
-      firebaseKey
-    );
-    onClose();
-  };
-
-  const renderPlayerItem = ({ item }) => (
+  const renderTeamItem = ({ item }) => (
     <PrimaryButton
-      onPress={() => handlePlayerSelect(item)}
-      buttonText={item.name}
-      buttonStyle={styles.playerItem}
-      buttonTextStyle={styles.playerText}
-    />
-  );
-
-  const renderAssistItem = ({ item }) => (
-    <PrimaryButton
-      onPress={() => handleAssistSelect(item)}
-      buttonText={item.name}
-      buttonStyle={styles.playerItem}
+      onPress={() => handleTeamSelect(item)}
+      buttonText={item.teamName}
+      buttonStyle={styles.teamItem}
       buttonTextStyle={styles.playerText}
     />
   );
@@ -103,27 +54,14 @@ const PlayerListModal = ({
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeaderText}>
             <Text style={styles.modalHeaderTextStyle}>
-              {event["team"]} team {event["event"]}
+              SELECT {teamType} TEAM
             </Text>
           </View>
           <View style={styles.inputContainer}>
-            <Text style={styles.selectPlayerText}>
-              {selectingAssist ? "Select assist player" : "Select player"}
-            </Text>
             <FlatList
-              data={players}
-              keyExtractor={(item) => item.number}
-              renderItem={selectingAssist ? renderAssistItem : renderPlayerItem}
-              ListFooterComponent={
-                selectingAssist && (
-                  <PrimaryButton
-                    onPress={handleNoneSelect}
-                    buttonText={"NONE"}
-                    buttonStyle={styles.playerItem}
-                    buttonTextStyle={styles.playerText}
-                  />
-                )
-              }
+              data={teamsList}
+              keyExtractor={(item) => item.id}
+              renderItem={renderTeamItem}
             />
             <PrimaryButton
               onPress={onClose}
@@ -141,7 +79,7 @@ const PlayerListModal = ({
   );
 };
 
-export default PlayerListModal;
+export default TeamsListModal;
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -160,6 +98,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.headerTextColor,
     fontSize: dimensions.screenWidth * 0.05,
+    textTransform: "uppercase",
   },
   inputContainer: {
     flex: 1,
@@ -172,7 +111,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: colors.headerTextColor,
   },
-  playerItem: {
+  teamItem: {
     padding: dimensions.screenWidth * 0.02,
     borderBottomWidth: 1,
     borderBottomColor: colors.headerTextColor,

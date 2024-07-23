@@ -1,33 +1,55 @@
-IMAGE
+# Futsal app
 
-google drive link "https://drive.google.com/file/d/12jYhGPb1VIEDuPyB8ONTZ-lGDN0ScWuW/view?usp=drive_link",
-transform to "https://drive.google.com/uc?export=view&id=12jYhGPb1VIEDuPyB8ONTZ-lGDN0ScWuW",
+This repository contains code for the Futsal app which is used to track live scores and ... for futsal tournaments and leagues.
 
-CREATING A NEW TOURNAMENT
+Re-distributing content provided with this repository is not permitted.
 
-- User send's an email to leonimail100@gmail.com. Information needed:
+## Demo
 
-1. Tournament name
-2. Tournament date
-3. Image
+[![Home Screen](https://img.youtube.com/vi/VIDEO_ID_HOME/hqdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID_HOME)
+[![Profile Screen](https://img.youtube.com/vi/VIDEO_ID_PROFILE/hqdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID_PROFILE)
 
-- I create tournament using python/tournament_creator.py and also create new user.
-  After that I send user password for login.
+## Repository Structure
 
-- User create teams.
+- `adminScreens/` - Contains the screens and components related to the admin interface of the application. Admin is an user which has log in to torunament system.
+- `components/` - Reusable React Native components used throughout the application.
+- `constants/` - Contains constant values that are used throughout the application for consistency and ease of maintenance.
+- `python/` - Contains Python scripts for backend operations, simulations, and management tasks.
+- `screens/` - Contains the different screens or views of the React Native application.
+- `store/` - Contains context providers and state management related files.
+- `util/` - Contains utility functions for interacting with the backend and other services.
+- `App.js` - The main entry point of the React Native application.
+- `app.json` - Configuration file for the React Native application.
 
-- User create games. He has a option for auto generating games, and after that he must modify date and time.
+# Creating a New Tournament
 
-- Admin starts game, user can see it live.
+To create a new tournament, please follow these steps:
 
-ALL GAMES IN GROUP ARE FINISHED
+1. **Send an Email**:
 
-- User go to games. Select Round of 16 and press Generate Games and after that he must modify date and time.
+   - Address the email to: [leonimail100@gmail.com](mailto:leonimail100@gmail.com)
+   - Include the following information in your email:
+     - **Tournament Name**
+     - **Date**
+     - **Image** (attach an image for the tournament)
+     - **Match Length**
 
-ALL GAMES IN ROUND OF 16 ARE FINISHED
+2. **Admin Processing**:
 
-- User go to games. Select Quarter-finals and press Generate Games and after that he must modify date and time.
+   - After receiving your email, the admin will create new tournament and user.
+   - You will receive an email from the admin containing your username and password, which you will use to log in to the tournament system.
 
-ALL GAMES IN QUARTER-FINALS ARE FINISHED
+3. **User Actions**:
 
-- User go to games. Select Semi-finals and press Generate Games and after that he must modify date and time.
+   - **Login**: Use the provided username and password to log in.
+   - **Create Teams and Players**: Set up your teams and players within the system.
+   - **Create Games**:
+     - You can manually create games.
+     - Alternatively, use the auto-generate feature available in the Games screen. If you use auto-generate, you must manually modify the date and time for the games.
+
+4. **Live Mode**:
+
+   - The created games will be immediately available in live mode.
+
+5. **Advancing Stages**:
+   - Once all games in the tournament phase are finished, you can auto-generate games for the new stages.

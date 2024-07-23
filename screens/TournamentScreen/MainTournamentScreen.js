@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState } from "react";
-import { View, StyleSheet, Image, Text, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Image, Text } from "react-native";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import SecondaryButton from "../../components/buttons/SecondaryButton";
 import Background from "../../components/Background";
@@ -20,13 +20,14 @@ const TOURNAMENT_BUTTONS_SIZE = dimensions.screenWidth * 0.3;
 const TOURNAMENT_FONT_SIZE = dimensions.screenWidth * 0.05;
 
 function MainTournamentScreen({ navigation, route }) {
-  const tournamentName = route.params.tournamentName;
-  const tournamentPicture = route.params.tournamentPicture;
   const [liveMatchData, setliveMatchData] = useState({});
   const [loadingImages, setLoadingImages] = useState(true);
 
   const authCtx = useContext(AuthContext);
   const basicCtx = useContext(BasicContext);
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
+
   const isAdmin = authCtx.isAuthenticated(tournamentName);
 
   useEffect(() => {
@@ -34,7 +35,6 @@ function MainTournamentScreen({ navigation, route }) {
       title: tournamentName,
       headerRight: getHeaderRight,
     });
-    basicCtx.setTournamentName(tournamentName);
   }, [tournamentName, navigation, isAdmin]);
 
   useEffect(() => {
@@ -42,7 +42,6 @@ function MainTournamentScreen({ navigation, route }) {
       const data = await getData(tournamentName, "live");
       if (data !== null) {
         const liveMatch = Object.values(data)[0];
-        console.log("RECEIVED DATA", liveMatch);
         setliveMatchData(liveMatch);
       }
     }
@@ -56,9 +55,9 @@ function MainTournamentScreen({ navigation, route }) {
   }
 
   function liveMatchPressed() {
-    navigation.navigate("GameStack", {
-      screen: "MatchScreen",
-      params: { firebaseKey: liveMatchData.firebaseKey },
+    navigation.navigate("MatchScreen", {
+      firebaseKey: liveMatchData.firebaseKey,
+      tournamentPhase: liveMatchData.tournamentPhase,
     });
   }
 
@@ -74,7 +73,7 @@ function MainTournamentScreen({ navigation, route }) {
     <Background>
       <View style={styles.tournamentPictureContainer}>
         <Image
-          source={{ uri: tournamentPicture }}
+          source={{ uri: tournamentInfo.imageUri }}
           style={styles.image}
           resizeMode="cover"
           onLoad={() => setLoadingImages(false)}
@@ -126,7 +125,7 @@ function MainTournamentScreen({ navigation, route }) {
             <View style={styles.column}>
               <PrimaryButton
                 onPress={buttonHandler("Tables")}
-                buttonText={"Table"}
+                buttonText={"Tables"}
                 buttonStyle={styles.tournamentButton}
                 buttonTextStyle={styles.tournamentButtonText}
               />
@@ -139,7 +138,7 @@ function MainTournamentScreen({ navigation, route }) {
             </View>
             <View style={styles.column}>
               <PrimaryButton
-                onPress={buttonHandler("Games")}
+                onPress={buttonHandler("Statistics")}
                 buttonText={"Statistics"}
                 buttonStyle={styles.tournamentButton}
                 buttonTextStyle={styles.tournamentButtonText}
@@ -163,15 +162,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: dimensions.screenWidth * 0.05,
-    position: "relative", // Ensure position relative for absolute loader
   },
   image: {
     width: IMAGE_WIDTH,
     height: IMAGE_HEIGHT,
     borderRadius: 10,
-  },
-  imageLoader: {
-    position: "absolute",
   },
   startGameContainer: {
     alignItems: "center",
@@ -192,7 +187,7 @@ const styles = StyleSheet.create({
   },
   liveGameText: {
     color: colors.redNoticeColor,
-    fontSize: 20,
+    fontSize: dimensions.screenWidth * 0.05,
     fontWeight: "bold",
     paddingBottom: 5,
   },
@@ -219,11 +214,6 @@ const styles = StyleSheet.create({
     color: colors.headerTextColor,
     fontSize: TOURNAMENT_FONT_SIZE,
     fontWeight: "bold",
-  },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });
 

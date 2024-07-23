@@ -4,18 +4,21 @@ import { useEffect, useContext, useState } from "react";
 import { getTeams } from "../../util/https";
 import Background from "../../components/Background";
 import { BasicContext } from "../../store/basic-context";
+import colors from "../../constants/colors";
 import LoadinSpinner from "../../components/LoadingSpinner";
+import NoItemsDisplayer from "../../components/NoItemsDisplayer";
 function TableScreen() {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
   useEffect(() => {
     async function fetchTeamData() {
       try {
-        const data = await getTeams(tournament_name);
+        const data = await getTeams(tournamentName);
         const transformData = (data) => {
           const groupedTeams = {};
           data.forEach((team) => {
@@ -56,12 +59,18 @@ function TableScreen() {
     table.teams.sort((a, b) => b.p - a.p);
   });
 
+  tables.sort((a, b) => a.group.localeCompare(b.group));
+
   if (loading) {
     return (
       <Background>
         <LoadinSpinner />
       </Background>
     );
+  }
+
+  if (tables.length == 0) {
+    return <NoItemsDisplayer text={"TABLES NOT CREATED"} />;
   }
 
   const renderItem = ({ item }) => (
@@ -105,6 +114,7 @@ function TableScreen() {
         data={tables}
         renderItem={renderItem}
         keyExtractor={(item) => item.group}
+        scrollIndicatorInsets={{ right: 1 }}
       />
     </Background>
   );
@@ -115,12 +125,12 @@ const styles = StyleSheet.create({
     marginVertical: 10, // razmak među tablicama
     padding: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.headerTextColor,
     borderRadius: 5,
   },
   groupTitle: {
     fontSize: 18,
-    color: "white",
+    color: colors.headerTextColor,
     fontWeight: "bold",
     marginBottom: 20,
     marginTop: 10,
@@ -130,10 +140,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: colors.headerTextColor,
   },
   headerText: {
-    color: "white",
+    color: colors.headerTextColor,
     fontWeight: "bold",
     width: "12.5%", // 8 x 12.5
     textAlign: "center",
@@ -143,14 +153,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 5,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: colors.headerTextColor,
   },
   cell: {
     width: "12.5%",
     textAlign: "center",
-    color: "white",
+    color: colors.headerTextColor,
     borderRightWidth: 1,
-    borderRightColor: "#ccc",
+    borderRightColor: colors.headerTextColor,
     paddingVertical: 3,
   },
   lastCell: {

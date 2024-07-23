@@ -6,6 +6,8 @@ const colors = {
   bottomTabColor: "#23778c",
   bottomTabIconColor: "#f9f9fa",
   redNoticeColor: "#d24f2e",
+  confirmButtonColor: "#a4de6e",
+  cancelButtonColor: "#d98f4e",
 };
 
 export default colors;

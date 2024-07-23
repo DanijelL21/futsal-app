@@ -1,10 +1,8 @@
 import { Text, View, FlatList, StyleSheet, Alert } from "react-native";
 import { useEffect, useCallback, useState, useContext } from "react";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
-import SecondaryButton from "../../components/buttons/SecondaryButton";
 import { getTeamDetails } from "../../util/https";
 import { useFocusEffect } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import { deleteData } from "../../util/https";
 import Background from "../../components/Background";
 import dimensions from "../../constants/dimensions";
@@ -12,6 +10,7 @@ import colors from "../../constants/colors";
 import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
 import LoadinSpinner from "../../components/LoadingSpinner";
+import IoniconsButton from "../../components/buttons/IoniconsButton";
 const MODIFY_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const MODIFY_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TITLE_SIZE = dimensions.screenWidth * 0.0625;
@@ -24,15 +23,17 @@ function TeamDetailsScreen({ navigation, route }) {
   const key = route.params.firebaseKey;
 
   const authCtx = useContext(AuthContext);
-  const isAdmin = authCtx.isAuthenticated;
   const basicCtx = useContext(BasicContext);
-  const tournament_name = basicCtx.getTournamentName();
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
+
+  const isAdmin = authCtx.isAuthenticated(tournamentName);
 
   useFocusEffect(
     useCallback(() => {
       async function fetchTeamDetails() {
         try {
-          const teamDetails = await getTeamDetails(tournament_name, key);
+          const teamDetails = await getTeamDetails(tournamentName, key);
           setTeamData(teamDetails);
         } catch (error) {
           console.error("Error fetching teams:", error);
@@ -104,10 +105,14 @@ function TeamDetailsScreen({ navigation, route }) {
         data={teamData.players}
         renderItem={handlePlayersList}
         keyExtractor={(item) => item.number + Math.random()}
+        scrollIndicatorInsets={{ right: 1 }}
       />
       {isAdmin && (
         <View style={styles.deleteContainer}>
-          <SecondaryButton
+          <IoniconsButton
+            icon="trash"
+            size={36}
+            color={colors.redNoticeColor}
             onPress={() =>
               Alert.alert(
                 "Confirm Changes",
@@ -122,7 +127,7 @@ function TeamDetailsScreen({ navigation, route }) {
                     style: "destructive",
                     onPress: async () => {
                       await deleteData(
-                        tournament_name,
+                        tournamentName,
                         "teams",
                         teamData.firebaseKey
                       );
@@ -133,9 +138,7 @@ function TeamDetailsScreen({ navigation, route }) {
                 { cancelable: false }
               )
             }
-          >
-            <Ionicons name="trash" size={36} color={"red"} />
-          </SecondaryButton>
+          />
         </View>
       )}
     </Background>
