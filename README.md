@@ -9,11 +9,11 @@ Note: Redistribution of the content provided with this repository is not permitt
 The Futsal app offers a comprehensive solution for tracking live scores and managing futsal tournaments and leagues. Below are some of the key features demonstrated in the app:
 
 <div style="text-align: center;">
-  <div style="display: inline-block; margin-right: 20px; text-align: center;">
+  <div style="display: inline-block; margin-right: 10px; text-align: center;">
     <b>Tournaments Overview</b><br>
     <img src="images/tournaments_overview.gif" height="400" />
   </div>
-  <div style="display: inline-block; margin-right: 20px; text-align: center;">
+  <div style="display: inline-block; margin-right: 10px; text-align: center;">
     <b>Live Admin Screen</b><br>
     <img src="images/live_admin_screen.gif" height="400" />
   </div>
