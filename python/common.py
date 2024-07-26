@@ -1,3 +1,4 @@
+import json
 from firebase_admin import credentials, auth, db, initialize_app
 
 
@@ -42,13 +43,26 @@ def generate_next_id(path):
     max_id = max(ids)
     return max_id + 1
 
-def create_firebase_user(email: str, password: str):
+
+def _store_user_data(tournament_info: dict, password: str) -> None:
     try:
-        user = auth.create_user(
-            email=email,
-            password=password
-        )
+        with open("python/users.json", "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        data = {"tournaments": []}
+
+    tournament_info["password"] = password
+    data["tournaments"].append(tournament_info)
+
+    with open("python/users.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+
+def create_firebase_user(tournament_info: dict, password: str):
+    try:
+        user = auth.create_user(email=tournament_info["admin_mail"], password=password)
         print(f"Successfully created new user: {user.uid}")
+        _store_user_data(tournament_info, password)
         return user
     except auth.EmailAlreadyExistsError:
         print("The email address is already in use.")

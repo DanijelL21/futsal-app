@@ -1,10 +1,12 @@
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, Animated } from "react-native";
 import { useEffect, useState, useContext } from "react";
 import { getMatchEvents, getGame, getData } from "../../util/https";
 import { MatchEvents, goalsHandler } from "../../components/MatchEvents";
 import { BasicContext } from "../../store/basic-context";
 import Background from "../../components/Background";
 import colors from "../../constants/colors";
+import dimensions from "../../constants/dimensions";
+
 function MatchScreen({ navigation, route }) {
   const firebaseKey = route.params.firebaseKey;
   const tournamentPhase = route.params.tournamentPhase;
@@ -13,6 +15,7 @@ function MatchScreen({ navigation, route }) {
   const [time, setTime] = useState(0);
   const [score, setScore] = useState([0, 0]);
   const [gameData, setgameData] = useState({});
+  const [opacity] = useState(new Animated.Value(1));
 
   const basicCtx = useContext(BasicContext);
   const tournamentInfo = basicCtx.getTournamentData();
@@ -56,14 +59,37 @@ function MatchScreen({ navigation, route }) {
       }
     };
     fetchEvents();
-    const intervalId = setInterval(fetchEvents, 20000);
+    const intervalId = setInterval(fetchEvents, 10000);
     return () => clearInterval(intervalId);
+  }, []);
+
+  // Blinking time effect
+  useEffect(() => {
+    const blink = () => {
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0.5,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    };
+
+    const blinkInterval = setInterval(blink, 2000); // Blink every second
+    return () => clearInterval(blinkInterval);
   }, []);
 
   return (
     <Background>
       <View style={styles.timeContainer}>
-        <Text style={styles.time}>{time}'</Text>
+        <Animated.Text style={[styles.time, { opacity }]}>
+          {time}'
+        </Animated.Text>
       </View>
       <View style={styles.teamsContainer}>
         <Text style={[styles.teamText, { textAlign: "left", flex: 1 }]}>
@@ -101,8 +127,7 @@ const styles = StyleSheet.create({
   },
   teamText: {
     color: colors.headerTextColor,
-    fontSize: 20,
-    margin: 10,
+    fontSize: dimensions.screenWidth * 0.05,
   },
   scoreContainer: {
     flexDirection: "row",

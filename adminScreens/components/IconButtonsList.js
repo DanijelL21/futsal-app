@@ -10,7 +10,19 @@ import {
 } from "./IconButtons";
 import dimensions from "../../constants/dimensions";
 
+// Common icon size
+const ICON_SIZE = dimensions.screenWidth * 0.05;
+
 const IconButtonsList = ({ team, mode, seconds, handleIconPress }) => {
+  // Create a helper function for the onPress handler
+  const createOnPressHandler = (eventType) => () => {
+    handleIconPress({
+      event: eventType,
+      team,
+      time: Math.floor(seconds / 60) + 1,
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.rowContainer}>
@@ -18,52 +30,44 @@ const IconButtonsList = ({ team, mode, seconds, handleIconPress }) => {
           <>
             <View style={styles.columnContainer}>
               <GoalButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("goal")}
+                size={ICON_SIZE}
               />
               <OwnGoalButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("ownGoal")}
+                size={ICON_SIZE}
               />
             </View>
             <View style={styles.columnContainer}>
               <YellowCardButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("yellowCard")}
+                size={ICON_SIZE}
               />
               <RedCardButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("redCard")}
+                size={ICON_SIZE}
               />
             </View>
             <View style={styles.columnContainer}>
               <PenaltyButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("penalty")}
+                size={ICON_SIZE}
               />
               <PenaltyMissedButton
-                team={team}
-                seconds={seconds}
-                handleIconPress={handleIconPress}
+                onPress={createOnPressHandler("penaltyMissed")}
+                size={ICON_SIZE}
               />
             </View>
           </>
         ) : (
           <View style={styles.rowContainer}>
             <PenaltyButton
-              team={team}
-              seconds={seconds}
-              handleIconPress={handleIconPress}
+              onPress={createOnPressHandler("penalty")}
+              size={ICON_SIZE}
             />
             <PenaltyMissedButton
-              team={team}
-              seconds={seconds}
-              handleIconPress={handleIconPress}
+              onPress={createOnPressHandler("penaltyMissed")}
+              size={ICON_SIZE}
             />
           </View>
         )}

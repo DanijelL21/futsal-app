@@ -6,8 +6,38 @@ Re-distributing content provided with this repository is not permitted.
 
 ## Demo
 
-[![Home Screen](https://img.youtube.com/vi/VIDEO_ID_HOME/hqdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID_HOME)
-[![Profile Screen](https://img.youtube.com/vi/VIDEO_ID_PROFILE/hqdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID_PROFILE)
+<div style="text-align: center;">
+  <div style="display: inline-block; margin-right: 20px; text-align: center;">
+    <b>Tournaments Overview</b><br>
+    <img src="images/tournaments_overview.gif" height="400" />
+  </div>
+  <div style="display: inline-block; margin-right: 20px; text-align: center;">
+    <b>Live Admin Screen</b><br>
+    <img src="images/live_admin_screen.gif" height="400" />
+  </div>
+    <div style="display: inline-block; text-align: center;">
+    <b>User Live Match Screen</b><br>
+    <img src="images/live_user_screen.gif" height="400" />
+  </div>
+</div>
+
+### Tournament Main Screens
+
+Get an overview of all tournaments:
+
+![Tournaments Overview](images/tournaments_overview.gif)
+
+### Admin Live Match Screen
+
+Manage live matches seamlessly:
+
+![Admin Live Match Screen](images/live_admin_screen.gif)
+
+### User Live Match Screens
+
+Stay updated with live match details:
+
+![User Live Match Screen](images/live_user_screen.gif)
 
 ## Repository Structure
 

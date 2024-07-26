@@ -14,7 +14,7 @@ import { BasicContext } from "../store/basic-context";
 const DOT_SIZE = dimensions.screenWidth * 0.15;
 const TITLE_SIZE = dimensions.screenWidth * 0.075;
 const IMAGE_SIZE = dimensions.screenWidth * 0.6;
-const DATE_SIZE = dimensions.screenWidth * 0.065;
+const DATE_SIZE = dimensions.screenWidth * 0.05;
 
 const Title = ({ data, scrollOffsetAnimatedValue, positionAnimatedValue }) => {
   const inputRange = [0, data.length];
@@ -92,7 +92,7 @@ const Item = ({
       {!isLoading && (
         <Animated.View style={[styles.dateContainer, { opacity }]}>
           <Animated.Text style={styles.date}>
-            {item.tournamentDate}
+            {item.startDate} to {item.endDate}
           </Animated.Text>
         </Animated.View>
       )}
@@ -140,6 +140,14 @@ const Pagination = ({
 
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 
+function sortTournamentsByDate(tournaments) {
+  return tournaments.sort((a, b) => {
+    const dateA = new Date(a.startDate);
+    const dateB = new Date(b.startDate);
+    return dateA - dateB;
+  });
+}
+
 export default function TournamentsOverviewScreen({ navigation, route }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -153,7 +161,8 @@ export default function TournamentsOverviewScreen({ navigation, route }) {
     async function fetchTournaments() {
       try {
         const tournamentsData = await getTournaments();
-        setData(tournamentsData);
+        const sortedTournaments = sortTournamentsByDate(tournamentsData);
+        setData(sortedTournaments);
       } catch (error) {
         console.error(error);
       } finally {

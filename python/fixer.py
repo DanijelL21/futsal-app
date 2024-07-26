@@ -3,6 +3,7 @@ from common import get_firebase_object
 tournamentName = "MNT SMRIKA"
 problematic_stage = "Group Stage"
 
+
 def fix_games(path):
     obj = get_firebase_object(path)
 
