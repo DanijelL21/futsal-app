@@ -1,0 +1,44 @@
+{
+  "tournaments": [
+    {
+      "name": "Futsal Fiesta",
+      "start_date": "2024-06-11",
+      "end_date": "2024-06-15",
+      "image_uri": "https://drive.google.com/file/d/1LawafSQMKc5Fgrdb-guP7li1_xVzZdx4/view?usp=drive_link",
+      "color": "red",
+      "match_length": 30,
+      "admin_mail": "futsalfiesta@gmail.com",
+      "password": "xy9D6C"
+    },
+    {
+      "name": "All-Star Futsal Fest",
+      "start_date": "2024-07-02",
+      "end_date": "2024-07-06",
+      "image_uri": "https://drive.google.com/file/d/1hOvqj_21ildF8xCKt27ScwPq2vqTpMNK/view?usp=drive_link",
+      "color": "green",
+      "match_length": 30,
+      "admin_mail": "allstars@gmail.com",
+      "password": "FhzSeb"
+    },
+    {
+      "name": "Urban Footie Showdown",
+      "start_date": "2024-07-09",
+      "end_date": "2024-07-13",
+      "image_uri": "https://drive.google.com/file/d/1VWrPSd1ZCCml5FyOvaXvjugFvytwDKxB/view?usp=drive_link",
+      "color": "orange",
+      "match_length": 30,
+      "admin_mail": "urbanfootie@gmail.com",
+      "password": "SVvA3y"
+    },
+    {
+      "name": "Local Legends Cup",
+      "start_date": "2024-06-04",
+      "end_date": "2024-06-08",
+      "image_uri": "https://drive.google.com/file/d/1gNjOM88qH6DdVdVQUktpp6SvuFFHKpb3/view?usp=drive_link",
+      "color": "blue",
+      "match_length": 30,
+      "admin_mail": "locallegendscup@gmail.com",
+      "password": "Wfpqa8"
+    }
+  ]
+}
