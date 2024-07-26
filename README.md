@@ -1,10 +1,12 @@
 # Futsal app
 
-This repository contains code for the Futsal app which is used to track live scores and ... for futsal tournaments and leagues.
+This repository contains code for the Futsal app, which is used to track live scores and manage futsal tournaments and leagues.
 
-Re-distributing content provided with this repository is not permitted.
+Note: Redistribution of the content provided with this repository is not permitted.
 
 ## Demo
+
+The Futsal app offers a comprehensive solution for tracking live scores and managing futsal tournaments and leagues. Below are some of the key features demonstrated in the app:
 
 <div style="text-align: center;">
   <div style="display: inline-block; margin-right: 20px; text-align: center;">
@@ -21,27 +23,9 @@ Re-distributing content provided with this repository is not permitted.
   </div>
 </div>
 
-### Tournament Main Screens
-
-Get an overview of all tournaments:
-
-![Tournaments Overview](images/tournaments_overview.gif)
-
-### Admin Live Match Screen
-
-Manage live matches seamlessly:
-
-![Admin Live Match Screen](images/live_admin_screen.gif)
-
-### User Live Match Screens
-
-Stay updated with live match details:
-
-![User Live Match Screen](images/live_user_screen.gif)
-
 ## Repository Structure
 
-- `adminScreens/` - Contains the screens and components related to the admin interface of the application. Admin is an user which has log in to torunament system.
+- `adminScreens/` - Contains the screens and components related to the admin interface of the application. The admin is a user who has logged in to the tournament system.
 - `components/` - Reusable React Native components used throughout the application.
 - `constants/` - Contains constant values that are used throughout the application for consistency and ease of maintenance.
 - `python/` - Contains Python scripts for backend operations, simulations, and management tasks.
