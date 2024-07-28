@@ -1,7 +1,11 @@
+// External Libraries
 import { Text, View, FlatList, StyleSheet } from "react-native";
-import { getGames } from "../../util/https";
 import { useState, useCallback, useContext } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+
+// Internal Modules
+import { getData } from "../../util/https";
+import { addFirebaseKey } from "../../components/commonTranforms";
 import colors from "../../constants/colors";
 import dimensions from "../../constants/dimensions";
 import Background from "../../components/Background";
@@ -36,7 +40,12 @@ function GamesScreen({ navigation, route }) {
     useCallback(() => {
       async function fetchGames() {
         try {
-          const games = await getGames(tournamentName, tournamentPhase);
+          const data = await getData(
+            tournamentName,
+            `games/${tournamentPhase}`
+          );
+          const games = addFirebaseKey(data);
+
           const filteredGames = games.filter((game) => game !== null);
           setGameList(filteredGames);
         } catch (error) {

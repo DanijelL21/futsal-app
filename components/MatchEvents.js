@@ -1,4 +1,7 @@
+// External Libraries
 import { View, Text, StyleSheet, Pressable, FlatList } from "react-native";
+
+// Internal Modules
 import { deleteData } from "../util/https";
 import {
   GoalButton,
@@ -10,6 +13,7 @@ import {
 } from "../adminScreens/components/IconButtons";
 import dimensions from "../constants/dimensions";
 import colors from "../constants/colors";
+
 const formatPlayerName = (player) => {
   try {
     const [firstName, ...lastNameParts] = player.split(" ");
@@ -27,7 +31,7 @@ function MatchEvents({
   handleDeleteEvent,
 }) {
   let separatorRendered = false;
-
+  // console.log("EVENTS LIST", eventsList);
   const renderItem = ({ item, index }) => {
     const isHomeTeamEvent = item.team === "home";
     const eventContainerStyle = isHomeTeamEvent
@@ -72,7 +76,7 @@ function MatchEvents({
                   )}
                 </View>
               </>
-            ) : item.event === "own goal" ? (
+            ) : item.event === "ownGoal" ? (
               <>
                 <Text style={styles.displayedText}>{item.time}'</Text>
                 <View style={styles.scoreContainer}>
@@ -81,13 +85,13 @@ function MatchEvents({
                 </View>
                 <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               </>
-            ) : item.event === "yellow card" ? (
+            ) : item.event === "yellowCard" ? (
               <>
                 <Text style={styles.displayedText}>{item.time}'</Text>
                 <YellowCardButton />
                 <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               </>
-            ) : item.event === "red card" ? (
+            ) : item.event === "redCard" ? (
               <>
                 <Text style={styles.displayedText}>{item.time}'</Text>
                 <RedCardButton />
@@ -126,7 +130,7 @@ function MatchEvents({
 
               <Text style={styles.displayedText}>{item.time}'</Text>
             </>
-          ) : item.event === "own goal" ? (
+          ) : item.event === "ownGoal" ? (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               <View style={styles.scoreContainer}>
@@ -135,19 +139,19 @@ function MatchEvents({
               </View>
               <Text style={styles.displayedText}>{item.time}'</Text>
             </>
-          ) : item.event === "yellow card" ? (
+          ) : item.event === "yellowCard" ? (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               <YellowCardButton />
               <Text style={styles.displayedText}>{item.time}'</Text>
             </>
-          ) : item.event === "red card" ? (
+          ) : item.event === "redCard" ? (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               <RedCardButton />
               <Text style={styles.displayedText}>{item.time}'</Text>
             </>
-          ) : item.event === "penalty scored" ? (
+          ) : item.event === "penaltyScored" ? (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               <View style={styles.scoreContainer}>
@@ -213,14 +217,14 @@ function goalsHandler(events) {
   let awayGoals = 0;
 
   events.forEach((event) => {
-    if (event.event === "goal" || event.event === "penalty scored") {
+    if (event.event === "goal" || event.event === "penaltyScored") {
       if (event.team === "home") {
         homeGoals++;
       } else if (event.team === "away") {
         awayGoals++;
       }
     }
-    if (event.event === "own goal") {
+    if (event.event === "ownGoal") {
       if (event.team === "away") {
         homeGoals++;
       } else if (event.team === "home") {

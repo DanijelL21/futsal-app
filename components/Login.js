@@ -1,14 +1,17 @@
+// External Libraries
 import { useState, useContext } from "react";
 import { View, StyleSheet, Modal, TextInput, Alert } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+
+// Internal Modules
 import SecondaryButton from "./buttons/SecondaryButton";
+import PrimaryButton from "./buttons/PrimaryButton";
 import colors from "../constants/colors";
-import { login } from "../util/auth";
+import dimensions from "../constants/dimensions";
 import { AuthContext } from "../store/auth-context";
 import { BasicContext } from "../store/basic-context";
+import { login } from "../util/auth";
 import { getTournaments } from "../util/https";
-import PrimaryButton from "./buttons/PrimaryButton";
-import dimensions from "../constants/dimensions";
 
 function LoginScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);

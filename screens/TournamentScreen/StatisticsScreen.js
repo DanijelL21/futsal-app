@@ -1,11 +1,8 @@
+// External Libraries
 import React, { useState, useEffect } from "react";
-import {
-  Text,
-  StyleSheet,
-  View,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
+import { Text, StyleSheet, View, FlatList } from "react-native";
+
+// Internal Modules
 import Background from "../../components/Background";
 import NoItemsDisplayer from "../../components/NoItemsDisplayer";
 import colors from "../../constants/colors";

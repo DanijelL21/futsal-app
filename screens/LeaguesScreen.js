@@ -1,8 +1,11 @@
-import React from "react";
+// External Libraries
 import { Text, StyleSheet, View } from "react-native";
+
+// Internal Modules
 import Background from "../components/Background.js";
 import NoItemsDisplayer from "../components/NoItemsDisplayer.js";
 import colors from "../constants/colors.js";
+
 function LeaguesScreen() {
   const leagues = [];
 

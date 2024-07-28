@@ -1,12 +1,16 @@
+// External Libraries
 import { Text, View, StyleSheet, Animated } from "react-native";
 import { useEffect, useState, useContext } from "react";
-import { getMatchEvents, getGame, getData } from "../../util/https";
+
+// Internal Modules
+import { getData } from "../../util/https";
 import { MatchEvents, goalsHandler } from "../../components/MatchEvents";
 import { BasicContext } from "../../store/basic-context";
 import Background from "../../components/Background";
 import colors from "../../constants/colors";
 import dimensions from "../../constants/dimensions";
-
+import { useFirebaseData } from "../../components/useFirebaseData";
+import { addFirebaseKey } from "../../components/commonTranforms";
 function MatchScreen({ navigation, route }) {
   const firebaseKey = route.params.firebaseKey;
   const tournamentPhase = route.params.tournamentPhase;
@@ -14,25 +18,27 @@ function MatchScreen({ navigation, route }) {
   const [eventsList, setEventsList] = useState([]);
   const [time, setTime] = useState(0);
   const [score, setScore] = useState([0, 0]);
-  const [gameData, setgameData] = useState({});
+  const [gameInfo, setGameInfo] = useState({});
   const [opacity] = useState(new Animated.Value(1));
+  const [homeTeam, setHomeTeam] = useState(null);
+  const [awayTeam, setAwayTeam] = useState(null);
 
   const basicCtx = useContext(BasicContext);
   const tournamentInfo = basicCtx.getTournamentData();
   const tournamentName = tournamentInfo.tournamentName;
 
+  const gamesData = useFirebaseData(`${tournamentName}/events/${firebaseKey}/`);
+
   // get game data
   useEffect(() => {
     async function getGameData() {
       try {
-        console.log("FIREBASE KEY", firebaseKey);
-        const game = await getGame(
+        const game = await getData(
           tournamentName,
-          tournamentPhase,
-          firebaseKey
+          `/games/${tournamentPhase}/${firebaseKey}`
         );
-        console.log("GAME DATA", game);
-        setgameData(game);
+        console.log("GAME", game);
+        setGameInfo(game);
       } catch (error) {
         console.error("Error fetching team data:", error);
       }
@@ -40,49 +46,85 @@ function MatchScreen({ navigation, route }) {
     getGameData();
   }, []);
 
+  // fetch all teams data - THIS IS EXECUTED ONLY FIRST TIME
   useEffect(() => {
-    const fetchEvents = async () => {
+    async function fetchTeamData() {
       try {
-        const fetchedEvents = await getMatchEvents(tournamentName, firebaseKey);
-        console.log("fetchedEvents", fetchedEvents);
-        setEventsList(fetchedEvents["events"]);
-        const { homeGoals, awayGoals } = goalsHandler(fetchedEvents["events"]);
-        setScore([homeGoals, awayGoals]);
-        console.log("ISLIVE", isLive);
-        if (isLive === false) {
-          setTime(tournamentInfo.matchLength);
-        } else {
-          setTime(fetchedEvents["time"]);
+        const data = await getData(tournamentName, "teams");
+        const teams = addFirebaseKey(data);
+        console.log("TTT", teams);
+        const homeTeamData = teams.find(
+          (team) => team.teamName === gameInfo["home"]
+        );
+        const awayTeamData = teams.find(
+          (team) => team.teamName === gameInfo["away"]
+        );
+        if (homeTeamData) {
+          setHomeTeam(homeTeamData);
+        }
+
+        if (awayTeamData) {
+          setAwayTeam(awayTeamData);
         }
       } catch (error) {
-        console.error("Error fetching events:", error);
+        console.error("Error fetching team data:", error);
       }
-    };
-    fetchEvents();
-    const intervalId = setInterval(fetchEvents, 10000);
-    return () => clearInterval(intervalId);
-  }, []);
+    }
+    fetchTeamData();
+  }, [gameInfo]);
+
+  useEffect(() => {
+    const events = [];
+
+    if (gamesData) {
+      Object.keys(gamesData).forEach((key) => {
+        if (key !== "time") {
+          const eventObject = {
+            eventKey: key,
+            firebaseKey: firebaseKey,
+            ...gamesData[key],
+          };
+          events.push(eventObject);
+        }
+      });
+
+      const timeKey = Object.keys(gamesData.time)[0];
+
+      setEventsList(events);
+      const { homeGoals, awayGoals } = goalsHandler(events);
+      setScore([homeGoals, awayGoals]);
+      if (isLive === false) {
+        setTime(tournamentInfo.matchLength);
+      } else {
+        setTime(gamesData.time[timeKey].time);
+      }
+    }
+  }, [gamesData]);
 
   // Blinking time effect
   useEffect(() => {
-    const blink = () => {
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.5,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    };
+    if (isLive) {
+      const blink = () => {
+        Animated.sequence([
+          Animated.timing(opacity, {
+            toValue: 0.5,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      };
 
-    const blinkInterval = setInterval(blink, 2000); // Blink every second
-    return () => clearInterval(blinkInterval);
-  }, []);
+      const blinkInterval = setInterval(blink, 2000); // Blink every 2 seconds
+      return () => clearInterval(blinkInterval);
+    } else {
+      opacity.setValue(1);
+    }
+  }, [isLive]);
 
   return (
     <Background>
@@ -93,7 +135,7 @@ function MatchScreen({ navigation, route }) {
       </View>
       <View style={styles.teamsContainer}>
         <Text style={[styles.teamText, { textAlign: "left", flex: 1 }]}>
-          {gameData?.home}
+          {homeTeam?.teamName}
         </Text>
         <View style={styles.scoreContainer}>
           <Text style={styles.scoreText}>{score[0]}</Text>
@@ -101,7 +143,7 @@ function MatchScreen({ navigation, route }) {
           <Text style={styles.scoreText}>{score[1]}</Text>
         </View>
         <Text style={[styles.teamText, { textAlign: "right", flex: 1 }]}>
-          {gameData?.away}
+          {awayTeam?.teamName}
         </Text>
       </View>
       <View style={styles.eventListContainer}>

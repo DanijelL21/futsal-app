@@ -1,12 +1,16 @@
-import React from "react";
+// External Libraries
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useEffect, useContext, useState } from "react";
-import { getTeams } from "../../util/https";
+
+// Internal Modules
+import { getData } from "../../util/https";
 import Background from "../../components/Background";
 import { BasicContext } from "../../store/basic-context";
 import colors from "../../constants/colors";
 import LoadinSpinner from "../../components/LoadingSpinner";
 import NoItemsDisplayer from "../../components/NoItemsDisplayer";
+import { addFirebaseKey } from "../../components/commonTranforms";
+
 function TableScreen() {
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +22,8 @@ function TableScreen() {
   useEffect(() => {
     async function fetchTeamData() {
       try {
-        const data = await getTeams(tournamentName);
+        const teams = await getData(tournamentName, "teams");
+        const data = addFirebaseKey(teams);
         const transformData = (data) => {
           const groupedTeams = {};
           data.forEach((team) => {

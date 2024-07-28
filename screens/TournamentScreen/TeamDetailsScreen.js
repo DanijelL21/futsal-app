@@ -1,9 +1,11 @@
+// External Libraries
 import { Text, View, FlatList, StyleSheet, Alert } from "react-native";
 import { useEffect, useCallback, useState, useContext } from "react";
-import PrimaryButton from "../../components/buttons/PrimaryButton";
-import { getTeamDetails } from "../../util/https";
 import { useFocusEffect } from "@react-navigation/native";
-import { deleteData } from "../../util/https";
+
+// Internal Modules
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import { getData, deleteData } from "../../util/https";
 import Background from "../../components/Background";
 import dimensions from "../../constants/dimensions";
 import colors from "../../constants/colors";
@@ -11,6 +13,7 @@ import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
 import LoadinSpinner from "../../components/LoadingSpinner";
 import IoniconsButton from "../../components/buttons/IoniconsButton";
+
 const MODIFY_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const MODIFY_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TITLE_SIZE = dimensions.screenWidth * 0.0625;
@@ -20,7 +23,7 @@ function TeamDetailsScreen({ navigation, route }) {
   const [teamData, setTeamData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const key = route.params.firebaseKey;
+  const firebaseKey = route.params.firebaseKey;
 
   const authCtx = useContext(AuthContext);
   const basicCtx = useContext(BasicContext);
@@ -33,8 +36,11 @@ function TeamDetailsScreen({ navigation, route }) {
     useCallback(() => {
       async function fetchTeamDetails() {
         try {
-          const teamDetails = await getTeamDetails(tournamentName, key);
-          setTeamData(teamDetails);
+          const data = await getData(tournamentName, `teams/${firebaseKey}`);
+          data.players = data.players.filter((player) => player.name !== "");
+          data.firebaseKey = firebaseKey;
+          console.log("teamDetails", data);
+          setTeamData(data);
         } catch (error) {
           console.error("Error fetching teams:", error);
         } finally {

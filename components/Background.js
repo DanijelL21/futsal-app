@@ -1,5 +1,8 @@
+// External Libraries
 import { StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+
+// Internal Modules
 import colors from "../constants/colors.js";
 
 function Background({ children, style = null }) {

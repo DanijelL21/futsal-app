@@ -1,7 +1,10 @@
+// External Libraries
 import { StyleSheet, Text, View, Animated, Pressable } from "react-native";
 import type { PagerViewOnPageScrollEventData } from "react-native-pager-view";
 import { useRef, useEffect, useState, useContext } from "react";
 import PagerView from "react-native-pager-view";
+
+// Internal Modules
 import Background from "../components/Background";
 import colors from "../constants/colors";
 import dimensions from "../constants/dimensions";

@@ -1,10 +1,14 @@
+// External Libraries
 import { useContext } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+
+// Internal Modules
 import SecondaryButton from "./buttons/SecondaryButton";
 import colors from "../constants/colors";
-import { AuthContext } from "../store/auth-context";
 import dimensions from "../constants/dimensions";
+import { AuthContext } from "../store/auth-context";
+
 const ICON_SIZE = dimensions.screenWidth * 0.04;
 
 function LogOutScreen() {

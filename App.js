@@ -1,8 +1,17 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+// External Libraries
 import { NavigationContainer } from "@react-navigation/native";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+
+// Internal Modules
 import colors from "./constants/colors";
+import dimensions from "./constants/dimensions";
+import AuthContextProvider from "./store/auth-context";
+import BasicContextProvider from "./store/basic-context";
+
+// Screens
 import MainScreen from "./screens/NewsScreen.js";
 import MatchScreen from "./screens/TournamentScreen/MatchScreen.js";
 import TournamentsOverviewScreen from "./screens/TournamentsOverviewScreen.tsx";
@@ -11,16 +20,14 @@ import StatisticsScreen from "./screens/TournamentScreen/StatisticsScreen";
 import TableScreen from "./screens/TournamentScreen/TableScreen";
 import TeamsScreen from "./screens/TournamentScreen/TeamsScreen.js";
 import LeaguesScreen from "./screens/LeaguesScreen.js";
-import GamesHandler from "./adminScreens/GamesHandler";
 import GamesScreen from "./screens/TournamentScreen/GamesScreen.js";
 import TeamDetailsScreen from "./screens/TournamentScreen/TeamDetailsScreen.js";
+
+// Admin Screens
+import GamesHandler from "./adminScreens/GamesHandler";
 import LiveMatchScreen from "./adminScreens/LiveMatchScreen.js";
 import TeamsHandler from "./adminScreens/TeamsHandler.js";
 import StartGameScreen from "./adminScreens/StartGameScreen.js";
-import { StatusBar } from "expo-status-bar";
-import dimensions from "./constants/dimensions";
-import AuthContextProvider from "./store/auth-context";
-import BasicContextProvider from "./store/basic-context";
 
 const Stack = createStackNavigator();
 const BottomTab = createBottomTabNavigator();

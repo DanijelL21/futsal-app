@@ -1,5 +1,8 @@
-import React, { useEffect, useContext, useState } from "react";
+// External Libraries
+import { useEffect, useContext, useState } from "react";
 import { View, StyleSheet, Image, Text } from "react-native";
+
+// Internal Modules
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import SecondaryButton from "../../components/buttons/SecondaryButton";
 import Background from "../../components/Background";

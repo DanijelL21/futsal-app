@@ -1,5 +1,9 @@
-import { postData, getTeams, getGames } from "../util/https";
+// External Libraries
 import { Alert } from "react-native";
+
+// Internal Modules
+import { postData, getData } from "../util/https";
+import { addFirebaseKey } from "./commonTranforms";
 
 const PHASES = {
   GROUP_STAGE: "Group Stage",
@@ -29,7 +33,9 @@ const MATCHUPS = [
 ];
 
 async function groupTeamsByGroup(tournamentName) {
-  const teams = await getTeams(tournamentName);
+  const data = await getData(tournamentName, "teams");
+  const teams = addFirebaseKey(data);
+
   return teams.reduce((acc, team) => {
     if (!acc[team.group]) acc[team.group] = [];
     acc[team.group].push({
@@ -100,7 +106,8 @@ async function generateRoundOf16Games(tournamentName) {
 }
 
 async function generateOtherMatches(tournamentName, phase) {
-  const previousGames = await getGames(tournamentName, PREVIOUS_PHASES[phase]);
+  const data = await getData(tournamentName, `games/${PREVIOUS_PHASES[phase]}`);
+  const previousGames = addFirebaseKey(data);
 
   if (!previousGames.length || previousGames.some((game) => !game.score)) {
     Alert.alert(

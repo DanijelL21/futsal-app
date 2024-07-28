@@ -1,8 +1,11 @@
-import React from "react";
+// External Libraries
 import { Text, StyleSheet, View } from "react-native";
+
+// Internal Modules
 import Background from "../components/Background.js";
 import dimensions from "../constants/dimensions.js";
 import colors from "../constants/colors.js";
+
 function NoItemsDisplayer({ text, includeBackground = true }) {
   const content = (
     <View style={styles.container}>

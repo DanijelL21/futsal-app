@@ -1,5 +1,5 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"; // https://react-native-async-storage.github.io/async-storage/docs/install/
-
+// External Libraries
+import AsyncStorage from "@react-native-async-storage/async-storage"; // AsyncStorage for persistent storage
 import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext({

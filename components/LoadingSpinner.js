@@ -1,5 +1,9 @@
+// External Libraries
 import { View, ActivityIndicator, StyleSheet } from "react-native";
+
+// Internal Modules
 import colors from "../constants/colors";
+
 function LoadinSpinner() {
   return (
     <View style={styles.loadingContainer}>

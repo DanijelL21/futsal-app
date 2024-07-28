@@ -1,16 +1,21 @@
+// External Libraries
 import { Text, View, FlatList, StyleSheet } from "react-native";
-import { getTeams } from "../../util/https";
 import { useState, useCallback, useContext } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+
+// Internal Modules
+import { getData } from "../../util/https";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import SecondaryButton from "../../components/buttons/SecondaryButton";
-import { useFocusEffect } from "@react-navigation/native";
 import Background from "../../components/Background";
 import colors from "../../constants/colors";
 import dimensions from "../../constants/dimensions";
 import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
+import { addFirebaseKey } from "../../components/commonTranforms";
 import LoadinSpinner from "../../components/LoadingSpinner";
 import NoItemsDisplayer from "../../components/NoItemsDisplayer";
+
 const ADD_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const ADD_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
 const TEAM_PADDING = dimensions.screenWidth * 0.0375;
@@ -31,7 +36,8 @@ function TeamsScreen({ navigation, route }) {
     useCallback(() => {
       async function fetchTeams() {
         try {
-          const teams = await getTeams(tournamentName);
+          const data = await getData(tournamentName, "teams");
+          const teams = addFirebaseKey(data);
           const filteredTeams = teams.filter((team) => team !== null);
           if (filteredTeams.length > 0) {
             filteredTeams.sort((a, b) => (a.group > b.group ? 1 : -1));

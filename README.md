@@ -2,7 +2,9 @@
 
 This repository contains code for the Futsal app, which is used to track live scores and manage futsal tournaments and leagues.
 
-Note: Redistribution of the content provided with this repository is not permitted.
+### Note on Excluded Files and Screens
+
+Please note that this repository does not include all files and screens necessary for the complete functionality of the application. The excluded files and screens are part of the final version of the app, which will be available on the App Store and Google Play.
 
 ## Demo
 

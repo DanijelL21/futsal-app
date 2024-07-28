@@ -1,9 +1,13 @@
+// External Libraries
 import { StyleSheet, View } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
+
+// Internal Modules
 import dimensions from "../constants/dimensions";
 import colors from "../constants/colors";
+
 const GrupsDropdownMenu = ({ setSelectedPhase }) => {
   const phases = [
     { key: "1", value: "Group Stage" },
