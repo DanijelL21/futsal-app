@@ -31,7 +31,7 @@ function MatchEvents({
   handleDeleteEvent,
 }) {
   let separatorRendered = false;
-  // console.log("EVENTS LIST", eventsList);
+
   const renderItem = ({ item, index }) => {
     const isHomeTeamEvent = item.team === "home";
     const eventContainerStyle = isHomeTeamEvent
@@ -179,7 +179,7 @@ function MatchEvents({
       !separatorRendered
     ) {
       showSeparator = true;
-      separatorRendered = true; // Ensure the separator is only shown once
+      separatorRendered = true;
     }
 
     return (

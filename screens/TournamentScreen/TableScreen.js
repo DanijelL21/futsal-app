@@ -127,7 +127,7 @@ function TableScreen() {
 
 const styles = StyleSheet.create({
   tableContainer: {
-    marginVertical: 10, // razmak među tablicama
+    marginVertical: 10,
     padding: 10,
     borderWidth: 1,
     borderColor: colors.headerTextColor,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   headerText: {
     color: colors.headerTextColor,
     fontWeight: "bold",
-    width: "12.5%", // 8 x 12.5
+    width: "12.5%",
     textAlign: "center",
   },
   teamRow: {

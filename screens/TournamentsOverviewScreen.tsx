@@ -154,7 +154,7 @@ function sortTournamentsByDate(tournaments) {
 export default function TournamentsOverviewScreen({ navigation, route }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingImages, setLoadingImages] = useState(true); // Centralized loading state for images
+  const [loadingImages, setLoadingImages] = useState(true);
   const scrollOffsetAnimatedValue = useRef(new Animated.Value(0)).current;
   const positionAnimatedValue = useRef(new Animated.Value(0)).current;
 
@@ -222,7 +222,7 @@ export default function TournamentsOverviewScreen({ navigation, route }) {
               scrollOffsetAnimatedValue={scrollOffsetAnimatedValue}
               positionAnimatedValue={positionAnimatedValue}
               navigation={navigation}
-              setLoadingImages={setLoadingImages} // Pass setLoadingImages to Item component
+              setLoadingImages={setLoadingImages}
             />
           </View>
         ))}
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   titleContainer: {
     alignItems: "center",
     alignContent: "center",
-    top: 100, // move title up or down
+    top: 100,
     overflow: "hidden",
     height: TITLE_SIZE,
   },
