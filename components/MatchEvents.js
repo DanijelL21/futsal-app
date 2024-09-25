@@ -1,5 +1,6 @@
 // External Libraries
 import { View, Text, StyleSheet, Pressable, FlatList } from "react-native";
+import { useState, useEffect } from "react";
 
 // Internal Modules
 import { deleteData } from "../util/https";
@@ -16,21 +17,59 @@ import colors from "../constants/colors";
 
 const formatPlayerName = (player) => {
   try {
-    const [firstName, ...lastNameParts] = player.split(" ");
+    const parts = player.split(" ");
+    if (parts.length === 1) {
+      return player; // Return the single word as is
+    }
+    const [firstName, ...lastNameParts] = parts;
     const lastName = lastNameParts.join(" ");
-    return `${firstName.charAt(0)}.${lastName}`;
+    return `${lastName}.${firstName.charAt(0)}`;
   } catch (error) {
     return player;
   }
 };
 
-function MatchEvents({
-  tournamentName,
-  eventsList,
-  matchMode,
-  handleDeleteEvent,
-}) {
-  let separatorRendered = false;
+function goalsHandler(events) {
+  let homeGoals = 0;
+  let awayGoals = 0;
+
+  events.forEach((event) => {
+    if (
+      (event.event === "goal" || event.event === "penaltyScored") &&
+      event.mode != "Advantage penalty"
+    ) {
+      if (event.team === "home") {
+        homeGoals++;
+      } else if (event.team === "away") {
+        awayGoals++;
+      }
+    }
+    if (event.event === "ownGoal") {
+      if (event.team === "away") {
+        homeGoals++;
+      } else if (event.team === "home") {
+        awayGoals++;
+      }
+    }
+  });
+  return { homeGoals, awayGoals };
+}
+
+function MatchEvents({ tournamentName, eventsList, handleDeleteEvent }) {
+  const [matchMode, setMatchMode] = useState("");
+
+  const sortedEvents = eventsList.sort((a, b) => a.time - b.time);
+  // useEffect to set matchMode based on the eventsList
+  useEffect(() => {
+    const penaltyKickEvent = sortedEvents.find(
+      (item) => item.mode !== "Regular game"
+    );
+    if (penaltyKickEvent) {
+      setMatchMode(penaltyKickEvent.mode); // Use penaltyKickEvent.mode here
+    } else {
+      setMatchMode(""); // Reset the mode if no event is found
+    }
+  }, [sortedEvents]);
 
   const renderItem = ({ item, index }) => {
     const isHomeTeamEvent = item.team === "home";
@@ -49,7 +88,7 @@ function MatchEvents({
       }
     };
 
-    const currentEvents = eventsList.slice(0, index + 1);
+    const currentEvents = sortedEvents.slice(0, index + 1);
     const { homeGoals, awayGoals } = goalsHandler(currentEvents);
     const formattedPlayerName = formatPlayerName(item.player);
     const score = `${homeGoals}-${awayGoals}`;
@@ -97,18 +136,28 @@ function MatchEvents({
                 <RedCardButton />
                 <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               </>
-            ) : item.event === "penalty scored" ? (
+            ) : item.event === "penaltyScored" ? (
               <>
-                <Text style={styles.displayedText}>{item.time}'</Text>
-                <View style={styles.scoreContainer}>
+                {item.mode === "Regular game" && (
+                  <Text style={styles.displayedText}>{item.time}'</Text>
+                )}
+                <View
+                  style={
+                    item.mode != "Advantage penalty" && styles.scoreContainer
+                  }
+                >
                   <PenaltyButton />
-                  <Text style={styles.displayedText}>{score}</Text>
+                  {item.mode !== "Advantage penalty" && (
+                    <Text style={styles.displayedText}>{score}</Text>
+                  )}
                 </View>
                 <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               </>
             ) : (
               <>
-                <Text style={styles.displayedText}>{item.time}'</Text>
+                {item.mode === "Regular game" && (
+                  <Text style={styles.displayedText}>{item.time}'</Text>
+                )}
                 <PenaltyMissedButton />
                 <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               </>
@@ -154,39 +203,43 @@ function MatchEvents({
           ) : item.event === "penaltyScored" ? (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
-              <View style={styles.scoreContainer}>
+              <View
+                style={
+                  item.mode != "Advantage penalty" && styles.scoreContainer
+                }
+              >
                 <PenaltyButton />
-                <Text style={styles.displayedText}>{score}</Text>
+                {item.mode !== "Advantage penalty" && (
+                  <Text style={styles.displayedText}>{score}</Text>
+                )}
               </View>
 
-              <Text style={styles.displayedText}>{item.time}'</Text>
+              {item.mode === "Regular game" && (
+                <Text style={styles.displayedText}>{item.time}'</Text>
+              )}
             </>
           ) : (
             <>
               <Text style={styles.displayedText}>{formattedPlayerName}</Text>
               <PenaltyMissedButton />
-              <Text style={styles.displayedText}>{item.time}'</Text>
+              {item.mode === "Regular game" && (
+                <Text style={styles.displayedText}>{item.time}'</Text>
+              )}
             </>
           )}
         </View>
       );
     }
 
-    let showSeparator = false;
-    if (
-      matchMode === "Penalty kicks" &&
-      item.event.includes("penalty") &&
-      !separatorRendered
-    ) {
-      showSeparator = true;
-      separatorRendered = true;
-    }
+    const showSeparator =
+      (item.mode === "Penalty kicks" || item.mode === "Advantage penalty") &&
+      index === sortedEvents.findIndex((event) => event.mode === item.mode);
 
     return (
       <>
         {showSeparator && (
           <View style={styles.separatorContainer}>
-            <Text style={styles.separatorText}>Penalty Shootout</Text>
+            <Text style={styles.separatorText}>{matchMode}</Text>
             <View style={styles.separator} />
           </View>
         )}
@@ -204,35 +257,12 @@ function MatchEvents({
 
   return (
     <FlatList
-      data={eventsList}
+      data={sortedEvents}
       keyExtractor={(item) => item.eventKey}
       renderItem={renderItem}
       scrollIndicatorInsets={{ right: 1 }}
     />
   );
-}
-
-function goalsHandler(events) {
-  let homeGoals = 0;
-  let awayGoals = 0;
-
-  events.forEach((event) => {
-    if (event.event === "goal" || event.event === "penaltyScored") {
-      if (event.team === "home") {
-        homeGoals++;
-      } else if (event.team === "away") {
-        awayGoals++;
-      }
-    }
-    if (event.event === "ownGoal") {
-      if (event.team === "away") {
-        homeGoals++;
-      } else if (event.team === "home") {
-        awayGoals++;
-      }
-    }
-  });
-  return { homeGoals, awayGoals };
 }
 
 const styles = StyleSheet.create({
@@ -242,6 +272,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignContent: "center",
     justifyContent: "center",
+    marginRight: 10,
   },
   homeTeamEventItem: {
     alignSelf: "flex-start",
@@ -250,7 +281,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   removeEvent: {
-    fontSize: dimensions.screenWidth * 0.05,
+    fontSize: dimensions.screenWidth * 0.07,
     color: colors.redNoticeColor,
     marginLeft: 10,
   },

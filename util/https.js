@@ -2,7 +2,7 @@
 import axios from "axios";
 import { Alert } from "react-native";
 
-import { BACKEND_URL } from "../firebaseConfig";
+import { BACKEND_URL } from "../secrets/firebaseConfig";
 
 const MAX_RETRIES = 3;
 
@@ -10,6 +10,7 @@ async function retryRequest(requestFunc, retries = MAX_RETRIES) {
   try {
     return await requestFunc();
   } catch (error) {
+    console.log("ERROR IN HTTPS", error);
     if (retries > 0) {
       return await retryRequest(requestFunc, retries - 1);
     } else {
@@ -50,11 +51,11 @@ export async function postData(tournamentName, data, key = null) {
   return await retryRequest(requestFunc);
 }
 
-export async function updateData(tournamentName, data, key, id) {
-  console.log("Trying to update data in https", key, id);
+export async function updateData(tournamentName, data, key) {
+  console.log("Trying to update data in https", key);
   const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   const requestFunc = async () => {
-    return await axios.patch(`${REQUEST_URL}/${key}/${id}.json`, data);
+    return await axios.patch(`${REQUEST_URL}/${key}.json`, data);
   };
 
   return await retryRequest(requestFunc);

@@ -1,70 +1,34 @@
-// External Libraries
-import { View, Text, FlatList, StyleSheet } from "react-native";
-import { useEffect, useContext, useState } from "react";
-
-// Internal Modules
-import { getData } from "../../util/https";
-import Background from "../../components/Background";
+import { useContext, useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, Alert } from "react-native";
 import { BasicContext } from "../../store/basic-context";
-import colors from "../../constants/colors";
+import Background from "../../components/Background";
 import LoadinSpinner from "../../components/LoadingSpinner";
 import NoItemsDisplayer from "../../components/NoItemsDisplayer";
-import { addFirebaseKey } from "../../components/commonTranforms";
+import generateTables from "../../components/TablesGenerator";
+import colors from "../../constants/colors";
 
 function TableScreen() {
-  const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const basicCtx = useContext(BasicContext);
   const tournamentInfo = basicCtx.getTournamentData();
   const tournamentName = tournamentInfo.tournamentName;
 
+  const [tables, setTables] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    async function fetchTeamData() {
+    const fetchTables = async () => {
       try {
-        const teams = await getData(tournamentName, "teams");
-        const data = addFirebaseKey(teams);
-        const transformData = (data) => {
-          const groupedTeams = {};
-          data.forEach((team) => {
-            const { group, teamName, statistics } = team;
-            const { pg, w, l, d, gd, p } = statistics;
-            const g = statistics.g.join(":");
-
-            if (!groupedTeams[group]) {
-              groupedTeams[group] = { group, teams: [] };
-            }
-
-            groupedTeams[group].teams.push({
-              name: teamName,
-              pg,
-              w,
-              l,
-              d,
-              g,
-              gd,
-              p,
-            });
-          });
-
-          return Object.values(groupedTeams);
-        };
-        setTables(transformData(data));
+        const tablesData = await generateTables(tournamentName); // Fetch tables
+        setTables(tablesData); // Set the data in state
       } catch (error) {
-        console.error("Error fetching team data:", error);
+        Alert.alert("Error fetching tables", "Please try again later");
       } finally {
-        setLoading(false);
+        setLoading(false); // Hide the loader once data is fetched
       }
-    }
+    };
 
-    fetchTeamData();
+    fetchTables();
   }, []);
-  // Sorting teams within each table by points
-  tables.forEach((table) => {
-    table.teams.sort((a, b) => b.p - a.p);
-  });
-
-  tables.sort((a, b) => a.group.localeCompare(b.group));
 
   if (loading) {
     return (
@@ -74,7 +38,7 @@ function TableScreen() {
     );
   }
 
-  if (tables.length == 0) {
+  if (tables.length === 0) {
     return <NoItemsDisplayer text={"TABLES NOT CREATED"} />;
   }
 
@@ -97,10 +61,21 @@ function TableScreen() {
           style={[
             styles.teamRow,
             index === item.teams.length - 1 ? { borderBottomWidth: 0 } : {},
-            // if it's last column, don't put line
           ]}
         >
-          <Text style={styles.cell}>{team.name}</Text>
+          <View style={styles.cell}>
+            {team.name.split(" ").map((word, index) => (
+              <Text
+                key={index}
+                style={styles.teamNameText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {word}
+              </Text>
+            ))}
+          </View>
+
           <Text style={styles.cell}>{team.pg}</Text>
           <Text style={styles.cell}>{team.w}</Text>
           <Text style={styles.cell}>{team.l}</Text>
@@ -164,12 +139,11 @@ const styles = StyleSheet.create({
     width: "12.5%",
     textAlign: "center",
     color: colors.headerTextColor,
-    borderRightWidth: 1,
-    borderRightColor: colors.headerTextColor,
     paddingVertical: 3,
   },
-  lastCell: {
-    borderRightWidth: 2,
+  teamNameText: {
+    textAlign: "center",
+    color: colors.headerTextColor,
   },
 });
 

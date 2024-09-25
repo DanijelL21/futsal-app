@@ -2,20 +2,31 @@
 import { StyleSheet, View } from "react-native";
 import { SelectList } from "react-native-dropdown-select-list";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect } from "react";
+import { useEffect, useContext } from "react";
 
 // Internal Modules
 import dimensions from "../constants/dimensions";
 import colors from "../constants/colors";
+import { BasicContext } from "../store/basic-context";
 
 const GrupsDropdownMenu = ({ setSelectedPhase }) => {
-  const phases = [
+  const allPhases = [
     { key: "1", value: "Group Stage" },
     { key: "2", value: "Round of 16" },
     { key: "3", value: "Quarter-finals" },
     { key: "4", value: "Semi-finals" },
     { key: "5", value: "Final" },
   ];
+
+  // Filter out the "Round of 16" phase if teamsNr is 16
+
+  const basicCtx = useContext(BasicContext);
+  const tournamentInfo = basicCtx.getTournamentData();
+
+  const phases =
+    tournamentInfo.teamsNr === 16
+      ? allPhases.filter((phase) => phase.value !== "Round of 16")
+      : allPhases;
 
   useEffect(() => {
     setSelectedPhase("Group Stage");

@@ -1,6 +1,6 @@
 // External Libraries
-import React, { useState, useEffect } from "react";
-import { Text, StyleSheet, View, FlatList } from "react-native";
+import { useState, useEffect, useContext } from "react";
+import { Text, StyleSheet, View, FlatList, TextInput } from "react-native";
 
 // Internal Modules
 import Background from "../../components/Background";
@@ -12,56 +12,41 @@ import {
   RedCardButton,
   YellowCardButton,
 } from "../../adminScreens/components/IconButtons";
+import { getData } from "../../util/https";
+import { BasicContext } from "../../store/basic-context";
 
 function StatisticsScreen() {
   const [sortColumn, setSortColumn] = useState("goal");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [sortedData, setSortedData] = useState([]);
+  const [statistics, setStatistics] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const statistics = [
-    {
-      player_one: {
-        club: "Texas",
-        goal: 10,
-        assists: 0,
-        "yellow card": 0,
-        "red card": 0,
-      },
-      player_two: {
-        club: "Texas",
-        goal: 5,
-        assists: 0,
-        "yellow card": 1,
-        "red card": 0,
-      },
-      player_three: {
-        club: "Texas",
-        goal: 1,
-        assists: 1,
-        "yellow card": 0,
-        "red card": 1,
-      },
-    },
-  ];
+  const basicCtx = useContext(BasicContext);
+  const tournamentInfo = basicCtx.getTournamentData();
+  const tournamentName = tournamentInfo.tournamentName;
 
-  // Flatten the statistics data into an array of players
-  const data = statistics.flatMap((stats) =>
-    Object.keys(stats).map((key) => ({
-      player: key.replace(/_/g, " "),
-      ...stats[key],
-    }))
-  );
+  useEffect(() => {
+    async function getStatistics() {
+      const data = await getData(tournamentName, "teams");
+      console.log("data", data);
+      if (data !== null) {
+        const stats = Object.values(data).flatMap((team) => team.players ?? []);
+        setStatistics(stats);
+      }
+    }
+    getStatistics();
+  }, []);
 
   useEffect(() => {
     // Sort data whenever sortColumn or sortOrder changes
-    const sorted = [...data].sort((a, b) => {
+    const sorted = [...statistics].sort((a, b) => {
       if (sortOrder === "asc") {
-        return a[sortColumn] - b[sortColumn];
+        return a.stats[sortColumn] - b.stats[sortColumn];
       } else {
-        return b[sortColumn] - a[sortColumn];
+        return b.stats[sortColumn] - a.stats[sortColumn];
       }
     });
-    setSortedData(sorted);
+    setStatistics(sorted);
   }, [sortColumn, sortOrder]);
 
   const handleSort = (column) => {
@@ -71,41 +56,82 @@ function StatisticsScreen() {
     setSortOrder(newSortOrder);
   };
 
+  const filteredStatistics = statistics.filter((player) =>
+    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderItem = ({ item }) => (
     <View style={styles.row}>
-      <Text style={[styles.cell, styles.extraCell]}>{item.player}</Text>
-      <Text style={[styles.cell, styles.extraCell]}>{item.club}</Text>
-      <Text style={styles.cell}>{item.goal}</Text>
-      <Text style={styles.cell}>{item.assists}</Text>
-      <Text style={styles.cell}>{item["yellow card"]}</Text>
-      <Text style={styles.cell}>{item["red card"]}</Text>
+      <Text
+        style={[styles.cell, styles.extraCell]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {item.name}
+      </Text>
+      <Text
+        style={[styles.cell, styles.extraCell]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {item.club}
+      </Text>
+      <Text style={styles.cell} numberOfLines={1} adjustsFontSizeToFit>
+        {item.stats.goals}
+      </Text>
+      <Text style={styles.cell} numberOfLines={1} adjustsFontSizeToFit>
+        {item.stats.assists}
+      </Text>
+      <Text style={styles.cell} numberOfLines={1} adjustsFontSizeToFit>
+        {item.stats.yc}
+      </Text>
+      <Text style={styles.cell} numberOfLines={1} adjustsFontSizeToFit>
+        {item.stats.rc}
+      </Text>
     </View>
   );
 
-  if (data.length === 0) {
+  if (statistics.length === 0) {
     return <NoItemsDisplayer text={"NO STATISTICS FOR NOW"} />;
   }
 
   return (
     <Background>
+      {/* Search Bar */}
+      <TextInput
+        style={styles.searchBar}
+        placeholder="Search by player name..."
+        placeholderTextColor="#ccc"
+        value={searchQuery}
+        onChangeText={(text) => setSearchQuery(text)}
+      />
       <View style={styles.tableHeader}>
         <Text style={[styles.headerCell, styles.extraCell]}>Player</Text>
         <Text style={[styles.headerCell, styles.extraCell]}>Club</Text>
-        <GoalButton onPress={() => handleSort("goal")} />
+        <GoalButton onPress={() => handleSort("goals")} />
         <AssistButton onPress={() => handleSort("assists")} />
-        <YellowCardButton onPress={() => handleSort("yellow card")} />
-        <RedCardButton onPress={() => handleSort("red card")} />
+        <YellowCardButton onPress={() => handleSort("yc")} />
+        <RedCardButton onPress={() => handleSort("rc")} />
       </View>
       <FlatList
-        data={sortedData}
+        data={filteredStatistics}
         renderItem={renderItem}
-        keyExtractor={(item) => item.player}
+        keyExtractor={(item) => `${item.club}-${item.number}-${item.name}`}
+        scrollIndicatorInsets={{ right: 1 }}
       />
     </Background>
   );
 }
 
 const styles = StyleSheet.create({
+  searchBar: {
+    backgroundColor: "#fff",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    marginVertical: 10,
+    color: "#000",
+  },
   tableHeader: {
     flexDirection: "row",
     borderBottomWidth: 1,

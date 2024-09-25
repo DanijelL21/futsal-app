@@ -1,16 +1,24 @@
-from common import put_firebase_object, generate_next_id, create_firebase_user
+import os
 import random
 import string
+import sys
+
+os.chdir("/Users/danijel/Desktop/app")
+
+from python.common import create_firebase_user, generate_next_id, put_firebase_object
 
 tournament_info = {
-            "name": "Local Legends Cup",
+            "name": "Dummy",
             "start_date" : "2024-06-04",
             "end_date": "2024-06-08",
-            "image_uri": "https://drive.google.com/file/d/1gNjOM88qH6DdVdVQUktpp6SvuFFHKpb3/view?usp=drive_link",
+            "image_uri": "https://drive.google.com/file/d/1UnowdurwZcz758n3wAEYiWlC7DYwtGLi/view?usp=sharing",
             "color": "blue",
             "match_length": 30,
-            "admin_mail": "locallegendscup@gmail.com",
+            "nr_of_teams": 24,
+            "admin_mail": "dummy@gmail.com",
         }
+
+# RUN python3 -m tournaments.tournament_creator
 
 def transform_image_link(link: str) -> str:
     start_index = link.find('/d/') + 3 
@@ -39,15 +47,24 @@ def generate_tournament_data(
             "imageUri": transform_image_link(tournament_info["image_uri"]),
             "color": tournament_info["color"],
             "matchLength": tournament_info["match_length"],
+            "teamsNr": tournament_info["nr_of_teams"],
             "adminMail": tournament_info["admin_mail"],
         }
     }
 
     return data
 
-data = generate_tournament_data(tournament_info)
-put_firebase_object("tournaments", data)
+def create_tournament(tournament_info: dict, ) -> None:
+    # create firebase user 
+    password = generate_password()
+    d = create_firebase_user(tournament_info, password)
 
-# create firebase user 
-password = generate_password()
-create_firebase_user(tournament_info, password)
+    if not d:
+        sys.exit(1)
+        
+    data = generate_tournament_data(tournament_info)
+    put_firebase_object("tournaments", data)
+
+    print(f"Succeesfully created tournament {tournament_info["name"]}")
+
+create_tournament(tournament_info)

@@ -29,7 +29,6 @@ function AuthContextProvider({ children }) {
   }
 
   function logout() {
-    console.log("LOGOUT");
     setAuthToken(null);
     AsyncStorage.removeItem("token");
   }

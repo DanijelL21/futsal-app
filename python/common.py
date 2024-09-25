@@ -1,10 +1,16 @@
+# to generate secret file go to project settings -> Service accounts -> generate new private api key
+# also change database url
+
 import json
-from firebase_admin import credentials, auth, db, initialize_app
+
+from firebase_admin import auth, credentials, db, initialize_app
+
+# old https://futsal-app-775db-default-rtdb.europe-west1.firebasedatabase.app/
 
 
 def _initialize_firebase_admin(
-    database_url: str = "https://futsal-app-775db-default-rtdb.europe-west1.firebasedatabase.app/",
-    secrets_file: str = "python/secret.json",
+    database_url: str = "https://futsalapp-c67e9-default-rtdb.europe-west1.firebasedatabase.app/",
+    secrets_file: str = "secrets/secret.json",
 ):
     try:
         cred = credentials.Certificate(secrets_file)
@@ -37,6 +43,13 @@ def get_firebase_object(
     return data
 
 
+def delete_firebase_object(file_path: str):
+    _initialize_firebase_admin()
+
+    ref = db.reference(file_path)
+    ref.delete()
+
+
 def generate_next_id(path):
     data = get_firebase_object(path)
     ids = [data[key]["id"] for key in data] if data else [0]
@@ -44,27 +57,53 @@ def generate_next_id(path):
     return max_id + 1
 
 
-def _store_user_data(tournament_info: dict, password: str) -> None:
+def _store_user_data(
+    tournament_info: dict, password: str, user_uid: str
+) -> None:
     try:
-        with open("python/users.json", "r") as file:
+        with open("secrets/users.json", "r") as file:
             data = json.load(file)
     except FileNotFoundError:
-        data = {"tournaments": []}
+        data = {"tournaments": [], "leagues": []}
 
     tournament_info["password"] = password
-    data["tournaments"].append(tournament_info)
+    tournament_info["user_uid"] = user_uid
+    data[tournament_info["mode"]].append(tournament_info)
 
-    with open("python/users.json", "w") as file:
+    with open("secrets/users.json", "w") as file:
         json.dump(data, file, indent=4)
 
 
 def create_firebase_user(tournament_info: dict, password: str):
+    _initialize_firebase_admin()
     try:
-        user = auth.create_user(email=tournament_info["admin_mail"], password=password)
+        user = auth.create_user(
+            email=tournament_info["admin_mail"], password=password
+        )
+        _store_user_data(tournament_info, password, user.uid)
         print(f"Successfully created new user: {user.uid}")
-        _store_user_data(tournament_info, password)
-        return user
+        return True
     except auth.EmailAlreadyExistsError:
         print("The email address is already in use.")
+        return False
     except Exception as e:
         print(f"Error creating user: {e}")
+        return False
+
+
+def delete_firebase_user(
+    uid: str,
+):
+    """
+    Delete a user from Firebase Authentication by their UID.
+    """
+    _initialize_firebase_admin()
+
+    try:
+        auth.delete_user(uid)
+        print(f"Successfully deleted user with UID: {uid}")
+    except auth.UserNotFoundError:
+        print(f"No user found with UID: {uid}")
+    except Exception as e:
+        print(f"Error deleting user: {e}")
+        raise

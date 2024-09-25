@@ -33,11 +33,6 @@ function LoginScreen() {
     // check if that admin is for correct tournament
     if (username === tournament.adminMail) {
       authCtx.authenticate({ token: token, tournamentName: tournamentName });
-    } else {
-      Alert.alert(
-        "Authentication failed!",
-        "This user is not authenticated for this tournament"
-      );
     }
     setIsModalVisible(false);
   }

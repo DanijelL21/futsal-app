@@ -13,6 +13,7 @@ import { BasicContext } from "../../store/basic-context";
 import { AuthContext } from "../../store/auth-context";
 import LoadinSpinner from "../../components/LoadingSpinner";
 import IoniconsButton from "../../components/buttons/IoniconsButton";
+import PlayerStatisticsModal from "../../components/PlayerStatisticsModal";
 
 const MODIFY_TEAM_PADDING = dimensions.screenWidth * 0.1;
 const MODIFY_TEAM_FONT_SIZE = dimensions.screenWidth * 0.05;
@@ -22,6 +23,8 @@ const PLAYER_INFO_SIZE = dimensions.screenWidth * 0.0375;
 function TeamDetailsScreen({ navigation, route }) {
   const [teamData, setTeamData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState("");
 
   const firebaseKey = route.params.firebaseKey;
 
@@ -37,7 +40,9 @@ function TeamDetailsScreen({ navigation, route }) {
       async function fetchTeamDetails() {
         try {
           const data = await getData(tournamentName, `teams/${firebaseKey}`);
-          data.players = data.players.filter((player) => player.name !== "");
+          if (data.hasOwnProperty("players")) {
+            data.players = data.players.filter((player) => player.name !== "");
+          }
           data.firebaseKey = firebaseKey;
           console.log("teamDetails", data);
           setTeamData(data);
@@ -66,7 +71,7 @@ function TeamDetailsScreen({ navigation, route }) {
   }
 
   function modifyTeam() {
-    console.log(teamData);
+    console.log("MODIFY", teamData);
     navigation.navigate("HandleTeams", {
       modifyTeamData: teamData,
     });
@@ -78,7 +83,15 @@ function TeamDetailsScreen({ navigation, route }) {
     }
     return (
       <View style={styles.playersContainer}>
-        <Text style={styles.playerInfo}>{item.name}</Text>
+        <PrimaryButton
+          onPress={() => {
+            setSelectedPlayer(item);
+            setModalVisible(true);
+          }}
+          buttonText={item.name}
+          ž
+          buttonTextStyle={styles.playerInfo}
+        />
         <Text style={styles.playerInfo}>{item.number}</Text>
       </View>
     );
@@ -86,6 +99,13 @@ function TeamDetailsScreen({ navigation, route }) {
 
   return (
     <Background>
+      <PlayerStatisticsModal
+        playerInfo={selectedPlayer}
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+        }}
+      />
       {isAdmin && (
         <View style={styles.modifyTeamContainer}>
           <PrimaryButton

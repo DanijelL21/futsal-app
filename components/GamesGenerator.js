@@ -1,9 +1,9 @@
 // External Libraries
 import { Alert } from "react-native";
-
 // Internal Modules
 import { postData, getData } from "../util/https";
 import { addFirebaseKey } from "./commonTranforms";
+import generateTables from "./TablesGenerator";
 
 const PHASES = {
   GROUP_STAGE: "Group Stage",
@@ -20,17 +20,6 @@ const PREVIOUS_PHASES = {
   [PHASES.SEMI_FINALS]: PHASES.QUARTER_FINALS,
   [PHASES.FINAL]: PHASES.SEMI_FINALS,
 };
-
-const MATCHUPS = [
-  ["A", "B"],
-  ["C", "D"],
-  ["E", "F"],
-  ["G", "H"],
-  ["B", "A"],
-  ["D", "C"],
-  ["F", "E"],
-  ["H", "G"],
-];
 
 async function groupTeamsByGroup(tournamentName) {
   const data = await getData(tournamentName, "teams");
@@ -68,7 +57,7 @@ async function generateGroupStageGames(tournamentName) {
   return games;
 }
 
-async function generateRoundOf16Games(tournamentName) {
+async function generateSecondRound(tournamentName, tournamentPhase) {
   const groups = await groupTeamsByGroup(tournamentName);
 
   if (
@@ -83,26 +72,33 @@ async function generateRoundOf16Games(tournamentName) {
     return [];
   }
 
-  const sortedGroups = Object.fromEntries(
-    Object.entries(groups).map(([group, teams]) => [
-      group,
-      teams.sort((a, b) => b.points - a.points),
-    ])
-  );
+  const tables = await generateTables(tournamentName);
+  const firstRoundMatches = [];
+  const secondRoundMatches = [];
 
-  return MATCHUPS.map(([group1, group2]) => {
-    const team1 = sortedGroups[group1]?.[0];
-    const team2 = sortedGroups[group2]?.[1];
-    return team1 && team2
-      ? {
-          home: team1.team,
-          away: team2.team,
-          date: "TBD",
-          time: "TBD",
-          id: `${team1.id}${team2.id}`,
-        }
-      : null;
-  }).filter(Boolean);
+  const createMatch = (homeTeam, awayTeam) => {
+    return {
+      home: homeTeam.name,
+      away: awayTeam.name,
+      date: "TBD",
+      time: "TBD",
+      id: `${homeTeam.name}${awayTeam.name}`,
+    };
+  };
+
+  for (let i = 0; i < tables.length; i += 2) {
+    const group1 = tables[i];
+    const group2 = tables[i + 1];
+
+    if (group1 && group2) {
+      firstRoundMatches.push(createMatch(group1.teams[0], group2.teams[1]));
+      secondRoundMatches.push(createMatch(group2.teams[0], group1.teams[1]));
+    }
+  }
+
+  const games = [...firstRoundMatches, ...secondRoundMatches];
+
+  return games;
 }
 
 async function generateOtherMatches(tournamentName, phase) {
@@ -116,6 +112,7 @@ async function generateOtherMatches(tournamentName, phase) {
     );
     return [];
   }
+
   const [winners, losers] = previousGames.reduce(
     ([win, lose], game) => {
       const [homeScore, awayScore] = game.score;
@@ -138,18 +135,21 @@ async function generateOtherMatches(tournamentName, phase) {
         away: arr[index + 1],
         date: "TBD",
         time: "TBD",
+        matchType: phase === "Final" ? "Final" : null,
         id: index / 2,
       });
     }
     return acc;
   }, []);
 
+  // third place
   if (phase === PHASES.FINAL && losers.length >= 2) {
     games.push({
       home: losers[0],
       away: losers[1],
       date: "TBD",
       time: "TBD",
+      matchType: "Third-place",
       id: games.length,
     });
   }
@@ -157,27 +157,44 @@ async function generateOtherMatches(tournamentName, phase) {
   return games;
 }
 
-async function generateGames({ tournamentName, tournamentPhase, setGameList }) {
-  let games = [];
-  try {
-    if (tournamentPhase === PHASES.GROUP_STAGE) {
-      games = await generateGroupStageGames(tournamentName);
-    } else if (tournamentPhase === PHASES.ROUND_OF_16) {
-      games = await generateRoundOf16Games(tournamentName);
-    } else {
-      games = await generateOtherMatches(tournamentName, tournamentPhase);
-    }
-
-    for (const game of games) {
-      await postData(tournamentName, game, `games/${tournamentPhase}`);
-    }
-    setGameList(games);
-  } catch (error) {
-    console.error("Error generating games:", error);
+async function generateGames({
+  tournamentName,
+  tournamentPhase,
+  teamsNr,
+  setGameList,
+}) {
+  if (teamsNr !== 16 && teamsNr !== 24) {
+    setGameList([]);
     Alert.alert(
-      "Error",
-      "There was an error generating the games. Please try again."
+      "Not supported",
+      "This feature is only supported for tournaments with 16 or 24 teams."
     );
+  } else {
+    let games = [];
+    try {
+      if (tournamentPhase === PHASES.GROUP_STAGE) {
+        games = await generateGroupStageGames(tournamentName);
+      } else if (tournamentPhase === PHASES.ROUND_OF_16) {
+        console.log("TEST");
+        games = await generateSecondRound(tournamentName, tournamentPhase);
+      } else if (tournamentPhase === PHASES.QUARTER_FINALS && teamsNr == 16) {
+        games = await generateSecondRound(tournamentName, tournamentPhase);
+      } else {
+        games = await generateOtherMatches(tournamentName, tournamentPhase);
+      }
+
+      for (const game of games) {
+        await postData(tournamentName, game, `games/${tournamentPhase}`);
+      }
+      setGameList(games);
+    } catch (error) {
+      setGameList([]);
+      console.log("ERROR", error);
+      Alert.alert(
+        "Error",
+        "There was an error generating the games. Please try again."
+      );
+    }
   }
 }
 

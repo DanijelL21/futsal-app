@@ -11,12 +11,17 @@ import colors from "../../constants/colors";
 import dimensions from "../../constants/dimensions";
 import { useFirebaseData } from "../../components/useFirebaseData";
 import { addFirebaseKey } from "../../components/commonTranforms";
+import PlayersModal from "../../components/PlayersModal";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import { Pressable } from "react-native";
 function MatchScreen({ navigation, route }) {
   const firebaseKey = route.params.firebaseKey;
   const tournamentPhase = route.params.tournamentPhase;
   const isLive = route.params.isLive ?? true;
   const [eventsList, setEventsList] = useState([]);
   const [time, setTime] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTeam, setModalTeam] = useState("");
   const [score, setScore] = useState([0, 0]);
   const [gameInfo, setGameInfo] = useState({});
   const [opacity] = useState(new Animated.Value(1));
@@ -40,7 +45,7 @@ function MatchScreen({ navigation, route }) {
         console.log("GAME", game);
         setGameInfo(game);
       } catch (error) {
-        console.error("Error fetching team data:", error);
+        console.error("Error fetching team datajj:", error);
       }
     }
     getGameData();
@@ -52,7 +57,6 @@ function MatchScreen({ navigation, route }) {
       try {
         const data = await getData(tournamentName, "teams");
         const teams = addFirebaseKey(data);
-        console.log("TTT", teams);
         const homeTeamData = teams.find(
           (team) => team.teamName === gameInfo["home"]
         );
@@ -67,7 +71,7 @@ function MatchScreen({ navigation, route }) {
           setAwayTeam(awayTeamData);
         }
       } catch (error) {
-        console.error("Error fetching team data:", error);
+        console.error("Error fetching team dataaaaa:", error);
       }
     }
     fetchTeamData();
@@ -93,13 +97,14 @@ function MatchScreen({ navigation, route }) {
       setEventsList(events);
       const { homeGoals, awayGoals } = goalsHandler(events);
       setScore([homeGoals, awayGoals]);
+      console.log("MATCH", tournamentInfo.matchLength);
       if (isLive === false) {
         setTime(tournamentInfo.matchLength);
       } else {
         setTime(gamesData.time[timeKey].time);
       }
     }
-  }, [gamesData]);
+  }, [gamesData, navigation]);
 
   // Blinking time effect
   useEffect(() => {
@@ -126,25 +131,55 @@ function MatchScreen({ navigation, route }) {
     }
   }, [isLive]);
 
+  function handleTeamPress(team) {
+    setModalTeam(team);
+    setModalVisible(true);
+  }
   return (
     <Background>
+      <PlayersModal
+        visible={modalVisible}
+        teamData={modalTeam === "home" ? homeTeam || {} : awayTeam || {}}
+        onClose={() => {
+          setModalVisible(false);
+        }}
+      />
       <View style={styles.timeContainer}>
         <Animated.Text style={[styles.time, { opacity }]}>
           {time}'
         </Animated.Text>
       </View>
       <View style={styles.teamsContainer}>
-        <Text style={[styles.teamText, { textAlign: "left", flex: 1 }]}>
-          {homeTeam?.teamName}
-        </Text>
+        <Pressable
+          style={{ flex: 1, justifyContent: "center" }}
+          onPress={() => handleTeamPress("home")}
+        >
+          <Text
+            style={[styles.teamText, { textAlign: "left", flexShrink: 1 }]}
+            adjustsFontSizeToFit
+            numberOfLines={2}
+          >
+            {homeTeam?.teamName}
+          </Text>
+        </Pressable>
+
         <View style={styles.scoreContainer}>
           <Text style={styles.scoreText}>{score[0]}</Text>
           <Text style={[styles.scoreText, { marginHorizontal: 10 }]}>:</Text>
           <Text style={styles.scoreText}>{score[1]}</Text>
         </View>
-        <Text style={[styles.teamText, { textAlign: "right", flex: 1 }]}>
-          {awayTeam?.teamName}
-        </Text>
+        <Pressable
+          style={{ flex: 1, justifyContent: "center" }}
+          onPress={() => handleTeamPress("home")}
+        >
+          <Text
+            style={[styles.teamText, { textAlign: "right", flexShrink: 1 }]}
+            adjustsFontSizeToFit
+            numberOfLines={2}
+          >
+            {awayTeam?.teamName}
+          </Text>
+        </Pressable>
       </View>
       <View style={styles.eventListContainer}>
         <MatchEvents tournamentName={tournamentName} eventsList={eventsList} />

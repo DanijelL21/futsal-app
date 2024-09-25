@@ -1,6 +1,6 @@
 // External Libraries
 import { Text, View, FlatList, StyleSheet } from "react-native";
-import { useState, useCallback, useContext } from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 
 // Internal Modules
@@ -17,6 +17,7 @@ import PrimaryButton from "../../components/buttons/PrimaryButton";
 import generateGames from "../../components/GamesGenerator";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import NoItemsDisplayer from "../../components/NoItemsDisplayer";
+import { sortGamesByDateAndTime } from "../../components/commonTranforms";
 
 const GAMES_PADDING = dimensions.screenWidth * 0.0375;
 const GAMES_FONT_SIZE = dimensions.screenWidth * 0.0375;
@@ -33,10 +34,11 @@ function GamesScreen({ navigation, route }) {
   const basicCtx = useContext(BasicContext);
   const tournamentInfo = basicCtx.getTournamentData();
   const tournamentName = tournamentInfo.tournamentName;
-
+  const teamsNr = tournamentInfo.teamsNr;
   const isAdmin = authCtx.isAuthenticated(tournamentName);
 
   useFocusEffect(
+    // using this instead of useEffect since we want to trigger this after modal is closed
     useCallback(() => {
       async function fetchGames() {
         try {
@@ -45,9 +47,10 @@ function GamesScreen({ navigation, route }) {
             `games/${tournamentPhase}`
           );
           const games = addFirebaseKey(data);
-
           const filteredGames = games.filter((game) => game !== null);
-          setGameList(filteredGames);
+          const sortedGames = sortGamesByDateAndTime(filteredGames);
+          console.log("FINAL");
+          setGameList(sortedGames);
         } catch (error) {
           console.error("Error fetching games:", error);
         } finally {
@@ -79,7 +82,14 @@ function GamesScreen({ navigation, route }) {
       <View style={styles.gamesContainer}>
         <SecondaryButton
           onPress={() => handleGameButtonPress(item)}
-          buttonStyle={styles.gamesButton}
+          buttonStyle={[
+            styles.gamesButton,
+            item.matchType === "Final"
+              ? { borderColor: "gold" }
+              : item.matchType === "Third-place"
+              ? { borderColor: "#cd7f32" }
+              : null,
+          ]}
         >
           <View style={styles.gameInfoRow}>
             <View
@@ -93,9 +103,15 @@ function GamesScreen({ navigation, route }) {
             <View style={styles.scoreContainer}>
               {item.hasOwnProperty("score") ? (
                 <>
+                  {"advantage" in item && item.advantage === "home" && (
+                    <Text style={{ color: "white", fontSize: 30 }}>*</Text>
+                  )}
                   <Text style={styles.games}>{item.score[0]}</Text>
                   <Text style={styles.gamesSeparator}>:</Text>
                   <Text style={styles.games}>{item.score[1]}</Text>
+                  {"advantage" in item && item.advantage === "away" && (
+                    <Text style={{ color: "white", fontSize: 30 }}>*</Text>
+                  )}
                 </>
               ) : (
                 <Text style={styles.games}>VS</Text>
@@ -133,6 +149,7 @@ function GamesScreen({ navigation, route }) {
   }
 
   function addGames() {
+    console.log("GOING TO HandleGames");
     navigation.navigate("HandleGames", {
       tournamentPhase: tournamentPhase,
     });
@@ -157,7 +174,12 @@ function GamesScreen({ navigation, route }) {
   async function handleGenerateGames() {
     setGenerating(true);
     try {
-      await generateGames({ tournamentName, tournamentPhase, setGameList });
+      await generateGames({
+        tournamentName,
+        tournamentPhase,
+        teamsNr,
+        setGameList,
+      });
     } catch (error) {
       console.error("Error generating games:", error);
     } finally {
@@ -256,5 +278,19 @@ const styles = StyleSheet.create({
   generateGamesText: {
     color: colors.headerTextColor,
     fontSize: dimensions.screenWidth * 0.05,
+  },
+  finalOrderContainer: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+  finalOrderTeam: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: 10,
+    marginLeft: 10,
+  },
+  finalOrderTeamText: {
+    marginLeft: 10,
+    color: colors.headerTextColor,
   },
 });

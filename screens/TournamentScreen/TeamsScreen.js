@@ -90,9 +90,7 @@ function TeamsScreen({ navigation, route }) {
   }
 
   function addTeams() {
-    navigation.navigate("HandleTeams", {
-      nrOfTeams: teamsList.length,
-    });
+    navigation.navigate("HandleTeams");
   }
 
   function addTeamHandler() {

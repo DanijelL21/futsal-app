@@ -1,7 +1,7 @@
 // External Libraries
 import axios from "axios";
 import { Alert } from "react-native";
-import { API_KEY } from "../firebaseConfig";
+import { API_KEY } from "../secrets/firebaseConfig";
 
 export async function login(email, password) {
   const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`;
