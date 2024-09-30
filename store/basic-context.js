@@ -2,27 +2,27 @@
 import { createContext, useState } from "react";
 
 export const BasicContext = createContext({
-  tournamentData: {},
-  setTournamentData: () => {},
-  getTournamentData: () => {},
+  competitionData: {},
+  setCompetitionData: () => {},
+  getCompetitionData: () => {},
 });
 
 function BasicContextProvider({ children }) {
-  const [tournamentInfo, setTournamentInfo] = useState({});
+  const [competitionInfo, setCompetitionInfo] = useState({});
 
-  function setTournamentData(data) {
+  function setCompetitionData(data) {
     console.log("SETTING DATA", data);
-    setTournamentInfo(data);
+    setCompetitionInfo(data);
   }
 
-  function getTournamentData() {
-    return tournamentInfo;
+  function getCompetitionData() {
+    return competitionInfo;
   }
 
   const value = {
-    tournamentData: tournamentInfo,
-    setTournamentData: setTournamentData,
-    getTournamentData: getTournamentData,
+    competitionData: competitionInfo,
+    setCompetitionData: setCompetitionData,
+    getCompetitionData: getCompetitionData,
   };
 
   return (

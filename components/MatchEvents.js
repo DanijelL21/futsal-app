@@ -55,7 +55,7 @@ function goalsHandler(events) {
   return { homeGoals, awayGoals };
 }
 
-function MatchEvents({ tournamentName, eventsList, handleDeleteEvent }) {
+function MatchEvents({ competitionName, eventsList, handleDeleteEvent }) {
   const [matchMode, setMatchMode] = useState("");
 
   const sortedEvents = eventsList.sort((a, b) => a.time - b.time);
@@ -80,7 +80,7 @@ function MatchEvents({ tournamentName, eventsList, handleDeleteEvent }) {
     const deleteEventPress = async () => {
       if (handleDeleteEvent) {
         await deleteData(
-          tournamentName,
+          competitionName,
           `events/${item.firebaseKey}`,
           item.eventKey
         );

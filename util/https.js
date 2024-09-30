@@ -38,6 +38,21 @@ export async function getTournaments(tournamentName = null) {
   return await retryRequest(requestFunc);
 }
 
+export async function getCompetition(mode, competitionName = null) {
+  // mode should be tournaments
+  const endpoint = competitionName
+    ? `/${mode}/${competitionName}.json`
+    : `/${mode}.json`;
+
+  const requestFunc = async () => {
+    const response = await axios.get(BACKEND_URL + endpoint);
+    const data = response.data;
+    return data ? (competitionName ? data : Object.values(data)) : [];
+  };
+
+  return await retryRequest(requestFunc);
+}
+
 export async function postData(tournamentName, data, key = null) {
   console.log("Trying to put in https", key);
   const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
@@ -51,9 +66,9 @@ export async function postData(tournamentName, data, key = null) {
   return await retryRequest(requestFunc);
 }
 
-export async function updateData(tournamentName, data, key) {
+export async function updateData(competitionName, data, key) {
   console.log("Trying to update data in https", key);
-  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
+  const REQUEST_URL = `${BACKEND_URL}${competitionName}`;
   const requestFunc = async () => {
     return await axios.patch(`${REQUEST_URL}/${key}.json`, data);
   };

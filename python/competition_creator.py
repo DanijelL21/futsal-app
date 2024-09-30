@@ -6,17 +6,18 @@ from common import create_firebase_user, generate_next_id, put_firebase_object
 
 mode = "leagues"
 
+
 competition_info = {
-            "name": "New League",
-            "mode":  "leagues",
-            "start_date" : "2024-06-04",
-            "end_date": "2024-06-08",
-            "image_uri": "https://drive.google.com/file/d/1UnowdurwZcz758n3wAEYiWlC7DYwtGLi/view?usp=sharing",
-            "color": "blue",
-            "match_length": 30,
-            "nr_of_teams": 24,
-            "admin_mail": "leaguetest@gmail.com",
-        }
+    "name": "Final Test",
+    "mode": "tournaments",
+    "start_date": "2024-06-04",
+    "end_date": "2024-06-08",
+    "image_uri": "https://drive.google.com/file/d/1UnowdurwZcz758n3wAEYiWlC7DYwtGLi/view?usp=sharing",
+    "color": "blue",
+    "match_length": 30,
+    "nr_of_teams": 10,
+    "admin_mail": "ddddd@gmail.com",
+}
 
 # RUN python3 -m tournaments.tournament_creator
 
@@ -41,7 +42,7 @@ def generate_data(
     data = {
         competition_info["name"]: {
             "id": generate_next_id(competition_info["mode"]),
-            "tournamentName": competition_info["name"], # WE SHOULD CHANGE THIS IN WHOLE CODE. FOR NOW LEAVE THIS
+            "competitionName": competition_info["name"], 
             "mode": competition_info["mode"],
             "startDate": competition_info["start_date"],
             "endDate": competition_info["end_date"],

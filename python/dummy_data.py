@@ -1,4 +1,4 @@
-team_names = [
+team_names_24 = [
     "Falcons United",
     "Eagles FC",
     "Lions Club",
@@ -23,6 +23,19 @@ team_names = [
     "Tornadoes XI",
     "Cyclones FC",
     "Stormers Club",
+]
+
+team_names_10 = [
+    "Falcons United",
+    "Eagles FC",
+    "Lions Club",
+    "Tigers SC",
+    "Wolves Academy",
+    "Panthers XI",
+    "Sharks FC",
+    "Dolphins",
+    "Hawks Team",
+    "Dragons Squad",
 ]
 
 first_names = [

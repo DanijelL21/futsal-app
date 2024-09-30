@@ -1,6 +1,6 @@
 from common import get_firebase_object
 
-tournamentName = "MNT SMRIKA"
+competitionName = "MNT SMRIKA"
 problematic_stage = "Group Stage"
 
 
@@ -15,11 +15,13 @@ def fix_games(path):
         else:
             id_to_keys[match_id] = [key]
 
-    duplicate_keys = {id: keys for id, keys in id_to_keys.items() if len(keys) > 1}
+    duplicate_keys = {
+        id: keys for id, keys in id_to_keys.items() if len(keys) > 1
+    }
 
     return duplicate_keys
 
 
-path = f"{tournamentName}/games/{problematic_stage}"
+path = f"{competitionName}/games/{problematic_stage}"
 
 print(fix_games(path))

@@ -58,7 +58,7 @@ def generate_next_id(path):
 
 
 def _store_user_data(
-    tournament_info: dict, password: str, user_uid: str
+    competition_info: dict, password: str, user_uid: str
 ) -> None:
     try:
         with open("secrets/users.json", "r") as file:
@@ -66,21 +66,21 @@ def _store_user_data(
     except FileNotFoundError:
         data = {"tournaments": [], "leagues": []}
 
-    tournament_info["password"] = password
-    tournament_info["user_uid"] = user_uid
-    data[tournament_info["mode"]].append(tournament_info)
+    competition_info["password"] = password
+    competition_info["user_uid"] = user_uid
+    data[competition_info["mode"]].append(competition_info)
 
     with open("secrets/users.json", "w") as file:
         json.dump(data, file, indent=4)
 
 
-def create_firebase_user(tournament_info: dict, password: str):
+def create_firebase_user(competition_info: dict, password: str):
     _initialize_firebase_admin()
     try:
         user = auth.create_user(
-            email=tournament_info["admin_mail"], password=password
+            email=competition_info["admin_mail"], password=password
         )
-        _store_user_data(tournament_info, password, user.uid)
+        _store_user_data(competition_info, password, user.uid)
         print(f"Successfully created new user: {user.uid}")
         return True
     except auth.EmailAlreadyExistsError:

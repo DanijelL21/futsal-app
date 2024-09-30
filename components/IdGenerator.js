@@ -1,10 +1,10 @@
 import { getData } from "../util/https";
 import { addFirebaseKey } from "./commonTranforms";
 
-async function idGenerator(tournamentName, tournamentPhase = null) {
+async function idGenerator(competitionName, competitionPhase = null) {
   console.log("IDGENERATOR");
-  const endpoint = tournamentPhase ? `games/${tournamentPhase}` : "/teams";
-  const data = await getData(tournamentName, endpoint);
+  const endpoint = competitionPhase ? `games/${competitionPhase}` : "/teams";
+  const data = await getData(competitionName, endpoint);
 
   if (data && Object.keys(data).length > 0) {
     const info = addFirebaseKey(data);
