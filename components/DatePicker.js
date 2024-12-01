@@ -50,7 +50,6 @@ const DatePicker = ({ visible, setDate, currentDisplayedDate, onClose }) => {
 
   const handleConfirm = () => {
     setDate(`${selectedDay}.${selectedMonth}.${selectedYear}`);
-    console.log(`${selectedDay}.${selectedMonth}.${selectedYear}`);
     onClose();
   };
 

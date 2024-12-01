@@ -1,15 +1,17 @@
 import { getData } from "../util/https";
 import { addFirebaseKey } from "./commonTranforms";
 
-async function getTeams(tournamentName) {
+async function getTeams(competitionName, mode) {
   try {
-    const teams = await getData(tournamentName, "teams");
+    const teams = await getData(competitionName, "teams");
     const data = addFirebaseKey(teams);
 
     const transformData = (data) => {
       const groupedTeams = {};
       data.forEach((team) => {
-        const { group, teamName, statistics } = team;
+        // console.log("team", team);
+        const group = mode === "tournaments" ? team.group : null;
+        const { teamName, statistics } = team;
         const { pg, w, l, d, gd, p } = statistics;
         const g = statistics.g.join(":");
 
@@ -33,6 +35,7 @@ async function getTeams(tournamentName) {
     };
 
     const transformedData = transformData(data);
+    console.log("transformedData", transformedData);
     transformedData.sort((a, b) => a.group.localeCompare(b.group));
     return transformedData;
   } catch (error) {
@@ -40,11 +43,16 @@ async function getTeams(tournamentName) {
   }
 }
 
-async function getGamesData(tournamentName) {
+async function getGamesData(mode, competitionName) {
   try {
-    const games = await getData(tournamentName, "games/Group Stage");
-    if (games) {
-      return games;
+    if (mode === "tournaments") {
+      const games = await getData(competitionName, "games/Group Stage");
+
+      if (games) {
+        return games;
+      } else {
+        return [];
+      }
     } else {
       return [];
     }
@@ -53,9 +61,9 @@ async function getGamesData(tournamentName) {
   }
 }
 
-async function generateTables(tournamentName) {
-  const tables = await getTeams(tournamentName);
-  const games = await getGamesData(tournamentName);
+async function generateTables(competitionName, mode) {
+  const tables = await getTeams(competitionName, mode);
+  const games = await getGamesData(competitionName, mode);
   tables.forEach((table) => {
     // Initialize the penaltyWins object
     const penaltyWins = {};

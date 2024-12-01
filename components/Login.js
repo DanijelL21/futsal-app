@@ -11,7 +11,7 @@ import dimensions from "../constants/dimensions";
 import { AuthContext } from "../store/auth-context";
 import { BasicContext } from "../store/basic-context";
 import { login } from "../util/auth";
-import { getTournaments } from "../util/https";
+import { getCompetition } from "../util/https";
 
 function LoginScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -20,19 +20,20 @@ function LoginScreen() {
 
   const authCtx = useContext(AuthContext);
   const basicCtx = useContext(BasicContext);
-  const tournamentInfo = basicCtx.getTournamentData();
-  const tournamentName = tournamentInfo.tournamentName;
+  const competitionInfo = basicCtx.getCompetitionData();
+  const competitionName = competitionInfo.competitionName;
 
   const ICON_SIZE = dimensions.screenWidth * 0.04;
 
   async function handleLogin() {
-    console.log("Logging in with:", username, password);
-
     const token = await login(username, password);
-    const tournament = await getTournaments(tournamentName);
-    // check if that admin is for correct tournament
-    if (username === tournament.adminMail) {
-      authCtx.authenticate({ token: token, tournamentName: tournamentName });
+    const competition = await getCompetition(
+      competitionInfo.mode,
+      competitionName
+    );
+    // check if that admin is for correct competition
+    if (username === competition.adminMail) {
+      authCtx.authenticate({ token: token, competitionName: competitionName });
     }
     setIsModalVisible(false);
   }

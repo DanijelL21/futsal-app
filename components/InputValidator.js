@@ -29,7 +29,6 @@ const validatePlayersNumber = (players) => {
 };
 
 export function validateTeamDataInput(teamData) {
-  console.log("TEAM DATA", teamData);
   let isValid = false;
   const noNumbers = /^[a-zA-Z\s]+$/;
   let message = "";

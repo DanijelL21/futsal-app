@@ -11,7 +11,6 @@ const TimePicker = ({ visible, setTime, currentDisplayedTime, onClose }) => {
   const [selectedHour, setSelectedHour] = useState("17");
   const [selectedMinute, setSelectedMinute] = useState("00");
 
-  console.log("currentDisplayedTime", currentDisplayedTime);
   // set initial time
   useEffect(() => {
     if (currentDisplayedTime !== "" && currentDisplayedTime !== "TBD") {

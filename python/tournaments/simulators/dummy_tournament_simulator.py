@@ -7,9 +7,9 @@ Purpose of this file is to simulate whole tournament.
 
 import os
 
-os.chdir("/Users/danijel/Desktop/app")
+os.chdir("/Users/danijel/Desktop/app-prod/resources")
 
-from python.dummy_data import team_names
+from python.dummy_data import team_names_24
 from python.tournaments.simulators.dummy_games_creator import (
     create_group_stage_games,
     create_other_games,
@@ -22,14 +22,15 @@ from python.tournaments.simulators.dummy_teams_creator import create_teams
 from python.tournaments.tournament_creator import create_tournament
 
 tournament_info = {
-    "name": "Final Test",
-    "start_date": "04.06.2024",
-    "end_date": "08.06.2024",
-    "image_uri": "https://drive.google.com/file/d/1UnowdurwZcz758n3wAEYiWlC7DYwtGLi/view?usp=sharing",
-    "color": "blue",
+    "name": "Futsal Fiesta",
+    "mode": "tournaments",
+    "start_date": "05.05.2025",
+    "end_date": "05.10.2025",
+    "image_uri": "https://drive.google.com/file/d/1gNjOM88qH6DdVdVQUktpp6SvuFFHKpb3/view?usp=drive_link",
+    "color": "red",
     "match_length": 30,
     "nr_of_teams": 24,
-    "admin_mail": "finaltest@gmail.com",
+    "admin_mail": "futsalfiesta@gmail.com",
 }
 
 # %% 1. Create tournament

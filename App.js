@@ -13,16 +13,16 @@ import BasicContextProvider from "./store/basic-context";
 
 // Screens
 import MainScreen from "./screens/NewsScreen.js";
-import MatchScreen from "./screens/TournamentScreen/MatchScreen.js";
-import TournamentsOverviewScreen from "./screens/TournamentsOverviewScreen.tsx";
-import MainTournamentScreen from "./screens/TournamentScreen/MainTournamentScreen.js";
-import StatisticsScreen from "./screens/TournamentScreen/StatisticsScreen";
-import TableScreen from "./screens/TournamentScreen/TableScreen";
-import TeamsScreen from "./screens/TournamentScreen/TeamsScreen.js";
-import LeaguesScreen from "./screens/LeaguesScreen.js";
-import GamesScreen from "./screens/TournamentScreen/GamesScreen.js";
-import TeamDetailsScreen from "./screens/TournamentScreen/TeamDetailsScreen.js";
-
+import SingleNewsScreen from "./screens/SingleNewsScreen";
+import MatchScreen from "./screens/CompetitionScreen/MatchScreen.js";
+import CompetitionOverviewScreen from "./screens/CompetitionOverviewScreen.tsx";
+import MainCompetitionScreen from "./screens/CompetitionScreen/MainCompetitionScreen.js";
+import StatisticsScreen from "./screens/CompetitionScreen/StatisticsScreen";
+import TableScreen from "./screens/CompetitionScreen/TableScreen";
+import TeamsScreen from "./screens/CompetitionScreen/TeamsScreen.js";
+import GamesScreen from "./screens/CompetitionScreen/GamesScreen.js";
+import TeamDetailsScreen from "./screens/CompetitionScreen/TeamDetailsScreen.js";
+import SplashScreen from "./screens/SplashScreen";
 // Admin Screens
 import GamesHandler from "./adminScreens/GamesHandler";
 import LiveMatchScreen from "./adminScreens/LiveMatchScreen.js";
@@ -48,21 +48,32 @@ const stackNavigatorOptions = {
   headerBackTitle: " ",
 };
 
+function NewsStack() {
+  return (
+    <Stack.Navigator screenOptions={stackNavigatorOptions}>
+      <Stack.Screen name="News" component={MainScreen} />
+      <Stack.Screen name="SingleNews" component={SingleNewsScreen} />
+    </Stack.Navigator>
+  );
+}
+
 function MainStack() {
   return (
     <BottomTab.Navigator screenOptions={stackNavigatorOptions}>
       <BottomTab.Screen
-        name="News"
-        component={MainScreen}
+        name="NewsStack"
+        component={NewsStack}
         options={{
+          title: "News",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="newspaper-outline" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <BottomTab.Screen
         name="TournamentsOverviewScreen"
-        component={TournamentsOverviewScreen}
+        component={CompetitionOverviewScreen}
         options={{
           title: "Tournaments",
           tabBarIcon: ({ color, size }) => (
@@ -70,10 +81,11 @@ function MainStack() {
           ),
           headerShown: false,
         }}
+        initialParams={{ mode: "tournaments" }}
       />
       <BottomTab.Screen
         name="LeaguesScreen"
-        component={LeaguesScreen}
+        component={CompetitionOverviewScreen}
         options={{
           title: "Leagues",
           tabBarIcon: ({ color, size }) => (
@@ -81,6 +93,7 @@ function MainStack() {
           ),
           headerShown: false,
         }}
+        initialParams={{ mode: "leagues" }}
       />
     </BottomTab.Navigator>
   );
@@ -94,13 +107,18 @@ export default function App() {
           <StatusBar style="light" />
           <Stack.Navigator screenOptions={stackNavigatorOptions}>
             <Stack.Screen
+              name="Splash"
+              component={SplashScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="MainScreen"
               component={MainStack}
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="TournamentScreen"
-              component={MainTournamentScreen}
+              name="CompetitionScreen"
+              component={MainCompetitionScreen}
             />
             <Stack.Screen name="Teams" component={TeamsScreen} />
             <Stack.Screen name="Tables" component={TableScreen} />

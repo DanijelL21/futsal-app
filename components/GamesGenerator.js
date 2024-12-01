@@ -175,7 +175,6 @@ async function generateGames({
       if (tournamentPhase === PHASES.GROUP_STAGE) {
         games = await generateGroupStageGames(tournamentName);
       } else if (tournamentPhase === PHASES.ROUND_OF_16) {
-        console.log("TEST");
         games = await generateSecondRound(tournamentName, tournamentPhase);
       } else if (tournamentPhase === PHASES.QUARTER_FINALS && teamsNr == 16) {
         games = await generateSecondRound(tournamentName, tournamentPhase);
@@ -189,7 +188,6 @@ async function generateGames({
       setGameList(games);
     } catch (error) {
       setGameList([]);
-      console.log("ERROR", error);
       Alert.alert(
         "Error",
         "There was an error generating the games. Please try again."

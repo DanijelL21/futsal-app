@@ -10,7 +10,6 @@ async function retryRequest(requestFunc, retries = MAX_RETRIES) {
   try {
     return await requestFunc();
   } catch (error) {
-    console.log("ERROR IN HTTPS", error);
     if (retries > 0) {
       return await retryRequest(requestFunc, retries - 1);
     } else {
@@ -38,8 +37,22 @@ export async function getTournaments(tournamentName = null) {
   return await retryRequest(requestFunc);
 }
 
+export async function getCompetition(mode, competitionName = null) {
+  // mode should be tournaments
+  const endpoint = competitionName
+    ? `/${mode}/${competitionName}.json`
+    : `/${mode}.json`;
+
+  const requestFunc = async () => {
+    const response = await axios.get(BACKEND_URL + endpoint);
+    const data = response.data;
+    return data ? (competitionName ? data : Object.values(data)) : [];
+  };
+
+  return await retryRequest(requestFunc);
+}
+
 export async function postData(tournamentName, data, key = null) {
-  console.log("Trying to put in https", key);
   const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   const postPath =
     key !== null ? `${REQUEST_URL}/${key}.json` : `${REQUEST_URL}.json`;
@@ -51,9 +64,8 @@ export async function postData(tournamentName, data, key = null) {
   return await retryRequest(requestFunc);
 }
 
-export async function updateData(tournamentName, data, key) {
-  console.log("Trying to update data in https", key);
-  const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
+export async function updateData(competitionName, data, key) {
+  const REQUEST_URL = `${BACKEND_URL}${competitionName}`;
   const requestFunc = async () => {
     return await axios.patch(`${REQUEST_URL}/${key}.json`, data);
   };
@@ -62,7 +74,6 @@ export async function updateData(tournamentName, data, key) {
 }
 
 export async function deleteData(tournamentName, key, id = null) {
-  console.log("Trying to delete data in https", key, id);
   const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
   const deletePath =
     id !== null
@@ -77,11 +88,19 @@ export async function deleteData(tournamentName, key, id = null) {
 }
 
 export async function getData(tournamentName, key) {
-  console.log("Trying to get data in https", key);
   const REQUEST_URL = `${BACKEND_URL}${tournamentName}`;
 
   const requestFunc = async () => {
     const response = await axios.get(`${REQUEST_URL}/${key}.json`);
+    return response.data;
+  };
+
+  return await retryRequest(requestFunc);
+}
+
+export async function getNews() {
+  const requestFunc = async () => {
+    const response = await axios.get(`${BACKEND_URL}/news.json`);
     return response.data;
   };
 

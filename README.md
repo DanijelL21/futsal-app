@@ -60,24 +60,3 @@ To create a new tournament, please follow these steps:
 
 5. **Advancing Stages**:
    - Once all games in the tournament phase are finished, you can auto-generate games for the new stages.
-
----
-
-Creating a new firebase app
-
-{
-"rules": {
-".read": "now < 1759280000000", // December 30, 2024
-".write": "now < 1759280000000", // December 30, 2024
-}
-}
-
-GamesGenerator explained
-
-1. Group stage
-
-GROUPS {"A": [{"id": 17, "points": 0, "team": "Cheetahs FC"}, {"id": 1, "points": 0, "team": "Falcons United"}, {"id": 9, "points": 0, "team": "Hawks Team"}], "B": [{"id": 10, "points": 0, "team": "Dragons Squad"}, {"id": 2, "points": 0, "team": "Eag}}...
-
-2. Second round
-
-sortedGroups {"A": [{"id": 17, "points": 6, "team": "Cheetahs FC"}, {"id": 1, "points": 1, "team": "Falcons United"}, {"id": 9, "points": 1, "team": "Hawks Team"}], "B": [{"id": 2, "points": 6, "team": "Eagles FC"}, {"id": 10, "points": 3, "team": "Dragons Squad"}}

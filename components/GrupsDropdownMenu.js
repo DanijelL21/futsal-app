@@ -9,7 +9,7 @@ import dimensions from "../constants/dimensions";
 import colors from "../constants/colors";
 import { BasicContext } from "../store/basic-context";
 
-const GrupsDropdownMenu = ({ setSelectedPhase }) => {
+function generateTournamentPhases(teamsNr) {
   const allPhases = [
     { key: "1", value: "Group Stage" },
     { key: "2", value: "Round of 16" },
@@ -18,18 +18,43 @@ const GrupsDropdownMenu = ({ setSelectedPhase }) => {
     { key: "5", value: "Final" },
   ];
 
-  // Filter out the "Round of 16" phase if teamsNr is 16
-
-  const basicCtx = useContext(BasicContext);
-  const tournamentInfo = basicCtx.getTournamentData();
-
   const phases =
-    tournamentInfo.teamsNr === 16
+    teamsNr === 16
       ? allPhases.filter((phase) => phase.value !== "Round of 16")
       : allPhases;
 
+  return phases;
+}
+
+function generateLeaguesPhases(teamsNr) {
+  const rounds = (teamsNr - 1) * 2;
+  const allPhases = Array.from({ length: rounds }, (v, i) => ({
+    key: (i + 1).toString(),
+    value: `Round ${i + 1}`,
+  }));
+
+  return allPhases;
+}
+
+const GrupsDropdownMenu = ({ setSelectedPhase }) => {
+  // Filter out the "Round of 16" phase if teamsNr is 16
+
+  const basicCtx = useContext(BasicContext);
+  const competitionInfo = basicCtx.getCompetitionData();
+
+  let phases;
+  if (competitionInfo.mode === "tournaments") {
+    phases = generateTournamentPhases(competitionInfo.teamsNr);
+  } else {
+    phases = generateLeaguesPhases(competitionInfo.teamsNr);
+  }
+
   useEffect(() => {
-    setSelectedPhase("Group Stage");
+    if (competitionInfo.mode === "tournaments") {
+      setSelectedPhase("Group Stage");
+    } else {
+      setSelectedPhase("Round 1");
+    }
   }, []);
 
   return (
@@ -39,7 +64,11 @@ const GrupsDropdownMenu = ({ setSelectedPhase }) => {
         data={phases}
         save="value"
         search={false}
-        defaultOption={{ key: "1", value: "Group Stage" }}
+        defaultOption={
+          competitionInfo.mode === "tournaments"
+            ? { key: "1", value: "Group Stage" }
+            : { key: "1", value: "Round 1" }
+        }
         boxStyles={styles.selectListBox}
         dropdownStyles={styles.selectListDropdown}
         inputStyles={styles.inputStyles}

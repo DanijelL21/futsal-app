@@ -10,6 +10,12 @@ export function addFirebaseKey(data) {
 
 export function sortGamesByDateAndTime(games) {
   return games.sort((a, b) => {
+    if (!a.date || !b.date || !a.time || !b.time) {
+      console.error("Invalid game data detected A", a);
+      console.error("Invalid game data detected B", b);
+      return 0;
+    }
+
     // Parse dates
     const [dayA, monthA, yearA] = a.date.split(".").map(Number);
     const [dayB, monthB, yearB] = b.date.split(".").map(Number);

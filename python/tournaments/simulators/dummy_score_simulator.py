@@ -1,9 +1,10 @@
-import itertools
+"""
+Don't use this file directly. Use dummy_tournament_simulator.py
+"""
+
 import random
 
 from python.common import get_firebase_object, put_firebase_object
-
-tournamentName = "Final Test"
 
 
 def generate_team_statistics(
@@ -167,16 +168,16 @@ def simulate_game_results(tournamentName, stage):
         away_team = match["away"]
         # game_key = f"{home_team}{away_team}"
 
-        nr_of_events = random.randint(1,12)
+        nr_of_events = random.randint(1, 12)
 
         events = []
-        score = [0,0]
+        score = [0, 0]
 
         put_firebase_object(
             f"{tournamentName}/events/{game_key}/time/end", {"time": 30}
         )
         for event_nr in range(nr_of_events):
-            event = generate_random_event(teams_dict,match)
+            event = generate_random_event(teams_dict, match)
 
             if event["event"] == "goal":
                 if event["team"] == "home":
@@ -193,19 +194,23 @@ def simulate_game_results(tournamentName, stage):
             events.append(event)
 
         # further stages must not finish draw
-        if stage != "Group Stage" and score[0]== score[1]:
+        if stage != "Group Stage" and score[0] == score[1]:
             score[0] += 1
             put_firebase_object(
                 f"{tournamentName}/events/{game_key}/{f"e_draw_settler"}",
                 {
                     "event": "goal",
-                    "player": teams_dict[home_team]["players"][random.randint(1, 12)]["name"],
+                    "player": teams_dict[home_team]["players"][
+                        random.randint(1, 12)
+                    ]["name"],
                     "team": "home",
                     "time": 29,
-                }
+                },
             )
 
-        updated_home_team, updated_away_team = generate_team_statistics(teams_dict[home_team], teams_dict[away_team], events, stage, score)
+        updated_home_team, updated_away_team = generate_team_statistics(
+            teams_dict[home_team], teams_dict[away_team], events, stage, score
+        )
 
         # PUT EVENTS
 

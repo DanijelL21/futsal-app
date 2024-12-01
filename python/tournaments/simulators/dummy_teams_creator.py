@@ -1,7 +1,23 @@
+"""
+Don't use this file directly. Use dummy_tournament_simulator.py
+"""
+
 import random
 
-from python.common import generate_next_id, put_firebase_object
-from python.dummy_data import first_names, last_names
+from common import generate_next_id, put_firebase_object
+from dummy_data import first_names, last_names, team_names_24
+
+competition_info = {
+    "name": "Futsal Fiesta",
+    "mode": "tournaments",
+    "start_date": "2025-05-05",
+    "end_date": "2025-05-10",
+    "image_uri": "https://drive.google.com/file/d/1gNjOM88qH6DdVdVQUktpp6SvuFFHKpb3/view?usp=drive_link",
+    "color": "red",
+    "match_length": 30,
+    "nr_of_teams": 24,
+    "admin_mail": "futsalfiesta@gmail.com",
+}
 
 
 def generate_random_name():
@@ -16,7 +32,6 @@ def generate_teams_data(
     data = {
         team_name: {
             "id": generate_next_id(path),
-            "group": group,
             "manager": manager,
             "teamName": team_name,
             "players": players,
@@ -31,20 +46,29 @@ def generate_teams_data(
             },
         }
     }
+
+    # Conditionally add 'group' key only if group is non-empty
+    if group:
+        data[team_name]["group"] = group
+
     return data
 
 
-def create_teams(tournamentName: str, team_names: list, nr_of_teams: int):
-    path = f"{tournamentName}/teams"
+def create_teams(competition_info, team_names: list):
+    path = f"{competition_info["name"]}/teams"
 
-    if nr_of_teams == 24:
+    ## for torunaments
+    if competition_info["nr_of_teams"] == 24:
         groups = ["A", "B", "C", "D", "E", "F", "G", "H"]
     else:
         groups = ["A", "B", "C", "D"]
         team_names = team_names[0:16]
 
     for i, team_name in enumerate(team_names):
-        group = groups[i % len(groups)]
+        if competition_info["mode"] == "tournaments":
+            group = groups[i % len(groups)]
+        else:
+            group = []
         manager = generate_random_name()
         players = [
             {
@@ -61,23 +85,4 @@ def create_teams(tournamentName: str, team_names: list, nr_of_teams: int):
     print("Succeesfully created dummy teams")
 
 
-# tournamentName = "Final Test"
-# team_names = ["Team 1", "Team 2", "Team 3"]
-# path = f"{tournamentName}/teams"
-
-# groups = ["A"]
-
-# for i, team_name in enumerate(team_names):
-#     group = groups[i % len(groups)]
-#     manager = generate_random_name()
-#     players = [
-#         {
-#             "name": generate_random_name(),
-#             "number": str(k),
-#             "club": team_name,
-#             "stats": {"goals": 0, "assists": 0, "yc": 0, "rc": 0},
-#         }
-#         for k in range(1, 14)
-#     ]
-#     data = generate_teams_data(path, team_name, group, manager, players)
-#     put_firebase_object(path, data)
+# create_teams(competition_info, team_names_24)

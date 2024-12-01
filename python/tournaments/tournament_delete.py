@@ -1,6 +1,7 @@
-import os
+"""
+Don't use this file directly. Use dummy_tournament_simulator.py
+"""
 
-os.chdir("/Users/danijel/Desktop/app")
 import json
 
 from python.common import delete_firebase_object, delete_firebase_user

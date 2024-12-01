@@ -33,12 +33,12 @@ function AuthContextProvider({ children }) {
     AsyncStorage.removeItem("token");
   }
 
-  function isAuthenticated(tournamentName) {
+  function isAuthenticated(competitionName) {
     if (
       authToken &&
       Object.keys(authToken).length > 0 &&
       authToken.token !== "" &&
-      authToken.tournamentName === tournamentName
+      authToken.competitionName === competitionName
     ) {
       return true;
     } else {

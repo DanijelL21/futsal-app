@@ -2,15 +2,19 @@
 # also change database url
 
 import json
+import os
 
 from firebase_admin import auth, credentials, db, initialize_app
 
 # old https://futsal-app-775db-default-rtdb.europe-west1.firebasedatabase.app/
 
+base_dir = os.path.abspath(os.path.dirname(__file__))
+secrets_file = os.path.join(base_dir, "secrets/secret.json")
+
 
 def _initialize_firebase_admin(
     database_url: str = "https://futsalapp-c67e9-default-rtdb.europe-west1.firebasedatabase.app/",
-    secrets_file: str = "secrets/secret.json",
+    secrets_file: str = secrets_file,
 ):
     try:
         cred = credentials.Certificate(secrets_file)
@@ -57,8 +61,17 @@ def generate_next_id(path):
     return max_id + 1
 
 
+def transform_image_link(link: str) -> str:
+    start_index = link.find("/d/") + 3
+    end_index = link.find("/", start_index)
+
+    file_id = link[start_index:end_index]
+
+    return f"https://drive.google.com/uc?export=view&id={file_id}"
+
+
 def _store_user_data(
-    tournament_info: dict, password: str, user_uid: str
+    competition_info: dict, password: str, user_uid: str
 ) -> None:
     try:
         with open("secrets/users.json", "r") as file:
@@ -66,21 +79,21 @@ def _store_user_data(
     except FileNotFoundError:
         data = {"tournaments": [], "leagues": []}
 
-    tournament_info["password"] = password
-    tournament_info["user_uid"] = user_uid
-    data[tournament_info["mode"]].append(tournament_info)
+    competition_info["password"] = password
+    competition_info["user_uid"] = user_uid
+    data[competition_info["mode"]].append(competition_info)
 
     with open("secrets/users.json", "w") as file:
         json.dump(data, file, indent=4)
 
 
-def create_firebase_user(tournament_info: dict, password: str):
+def create_firebase_user(competition_info: dict, password: str):
     _initialize_firebase_admin()
     try:
         user = auth.create_user(
-            email=tournament_info["admin_mail"], password=password
+            email=competition_info["admin_mail"], password=password
         )
-        _store_user_data(tournament_info, password, user.uid)
+        _store_user_data(competition_info, password, user.uid)
         print(f"Successfully created new user: {user.uid}")
         return True
     except auth.EmailAlreadyExistsError:
